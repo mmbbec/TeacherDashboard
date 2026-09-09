@@ -9,27 +9,47 @@ let state = {
   cache: {}
 };
 
-// API Client
+// Bulletproof API Client for Google Apps Script
 async function api(action, method = 'GET', data = {}) {
+  // Always attach action to query parameters
   const url = new URL(CONFIG.API_URL);
-  let options = { method: method };
+  url.searchParams.set('action', action);
 
   if (method === 'GET') {
-    url.searchParams.append('action', action);
-    for (let k in data) url.searchParams.append(k, data[k]);
+    for (let k in data) {
+      if (typeof data[k] === 'object') {
+        url.searchParams.set(k, JSON.stringify(data[k]));
+      } else {
+        url.searchParams.set(k, data[k]);
+      }
+    }
+    
+    try {
+      const res = await fetch(url.toString());
+      return await res.json();
+    } catch (err) {
+      console.error('API GET Error:', err);
+      return { success: false, error: err.toString() };
+    }
   } else {
-    options.body = JSON.stringify({ action, ...data });
-  }
+    // POST request: wrap action and payload inside body
+    const payload = JSON.stringify({ action: action, ...data });
 
-  try {
-    const res = await fetch(url.toString(), options);
-    return await res.json();
-  } catch (err) {
-    console.error('API Error', err);
-    return { success: false, error: err.toString() };
+    try {
+      const res = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8' // Prevents CORS preflight truncation
+        },
+        body: payload
+      });
+      return await res.json();
+    } catch (err) {
+      console.error('API POST Error:', err);
+      return { success: false, error: err.toString() };
+    }
   }
 }
-
 // Initializer
 document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
