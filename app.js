@@ -657,4 +657,691 @@ function showResourceForm(id) {
       </div>
       <div class="form-group">
         <label>Title</label>
-        <input id="resourceTitle" value="${escape
+        <input id="resourceTitle" value="${escapeAttr(row.TITLE || '')}" required>
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="resourceType">
+          <option ${row.TYPE === 'PDF' ? 'selected' : ''}>PDF</option>
+          <option ${row.TYPE === 'Notes' ? 'selected' : ''}>Notes</option>
+          <option ${row.TYPE === 'Video' ? 'selected' : ''}>Video</option>
+          <option ${row.TYPE === 'Link' ? 'selected' : ''}>Link</option>
+          <option ${row.TYPE === 'Other' ? 'selected' : ''}>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="resourceDescription">${escapeHtml(row.DESCRIPTION || '')}</textarea>
+      </div>
+      <div class="form-group">
+        <label>Google Drive / Resource URL</label>
+        <input id="resourceUrl" type="url" value="${escapeAttr(row.URL || '')}" placeholder="https://drive.google.com/...">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="secondary-button" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="save-button">Save Resource</button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitResourceForm(event, id) {
+  event.preventDefault();
+  const data = {
+    id: id,
+    subjectCode: document.getElementById('resourceSubject').value,
+    title: document.getElementById('resourceTitle').value,
+    type: document.getElementById('resourceType').value,
+    description: document.getElementById('resourceDescription').value,
+    url: document.getElementById('resourceUrl').value
+  };
+  await saveTeacherRecord('saveResource', data, 'Resource saved.');
+}
+
+// =====================================================
+// TIMETABLE MANAGER
+// =====================================================
+
+function renderTimetableManager() {
+  const rows = teacherData.timetable || [];
+  document.getElementById('teacherContent').innerHTML = `
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div><h2>📅 Timetable</h2></div>
+        <button class="add-button" onclick="showTimetableForm()">+ Add Timetable</button>
+      </div>
+      ${buildGenericTable(rows, [
+        ['SUBJECT_CODE', 'Subject'],
+        ['DAY', 'Day'],
+        ['START_TIME', 'Start'],
+        ['END_TIME', 'End'],
+        ['ROOM', 'Room']
+      ], 'showTimetableForm', 'deleteTimetable')}
+    </div>
+  `;
+}
+
+function showTimetableForm(id) {
+  const row = (teacherData.timetable || []).find(i => String(i.ID) === String(id)) || {};
+  openModal(id ? 'Edit Timetable' : 'Add Timetable', `
+    <form class="admin-form" onsubmit="submitTimetableForm(event, '${escapeJs(id || '')}')">
+      <div class="form-group">
+        <label>Subject</label>
+        <select id="timetableSubject" required>
+          <option value="">Select Subject</option>
+          ${buildSubjectOptions(row.SUBJECT_CODE)}
+        </select>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Day</label>
+          <select id="timetableDay">
+            ${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(day => `
+              <option ${row.DAY === day ? 'selected' : ''}>${day}</option>
+            `).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Room</label>
+          <input id="timetableRoom" value="${escapeAttr(row.ROOM || '')}">
+        </div>
+        <div class="form-group">
+          <label>Start Time</label>
+          <input id="timetableStart" type="time" value="${escapeAttr(row.START_TIME || '')}">
+        </div>
+        <div class="form-group">
+          <label>End Time</label>
+          <input id="timetableEnd" type="time" value="${escapeAttr(row.END_TIME || '')}">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="secondary-button" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="save-button">Save</button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitTimetableForm(event, id) {
+  event.preventDefault();
+  const data = {
+    id: id,
+    subjectCode: document.getElementById('timetableSubject').value,
+    day: document.getElementById('timetableDay').value,
+    startTime: document.getElementById('timetableStart').value,
+    endTime: document.getElementById('timetableEnd').value,
+    room: document.getElementById('timetableRoom').value
+  };
+  await saveTeacherRecord('saveTimetable', data, 'Timetable saved.');
+}
+
+// =====================================================
+// ASSIGNMENTS MANAGER
+// =====================================================
+
+function renderAssignmentsManager() {
+  const rows = teacherData.assignments || [];
+  document.getElementById('teacherContent').innerHTML = `
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div><h2>📝 Assignments</h2></div>
+        <button class="add-button" onclick="showAssignmentForm()">+ Add Assignment</button>
+      </div>
+      ${buildGenericTable(rows, [
+        ['SUBJECT_CODE', 'Subject'],
+        ['TITLE', 'Title'],
+        ['DUE_DATE', 'Due Date'],
+        ['URL', 'Link']
+      ], 'showAssignmentForm', 'deleteAssignment')}
+    </div>
+  `;
+}
+
+function showAssignmentForm(id) {
+  const row = (teacherData.assignments || []).find(i => String(i.ID) === String(id)) || {};
+  openModal(id ? 'Edit Assignment' : 'Add Assignment', `
+    <form class="admin-form" onsubmit="submitAssignmentForm(event, '${escapeJs(id || '')}')">
+      <div class="form-group">
+        <label>Subject</label>
+        <select id="assignmentSubject" required>
+          <option value="">Select Subject</option>
+          ${buildSubjectOptions(row.SUBJECT_CODE)}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input id="assignmentTitle" value="${escapeAttr(row.TITLE || '')}" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="assignmentDescription">${escapeHtml(row.DESCRIPTION || '')}</textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Due Date</label>
+          <input id="assignmentDueDate" type="date" value="${escapeAttr(row.DUE_DATE || '')}">
+        </div>
+        <div class="form-group">
+          <label>Link</label>
+          <input id="assignmentUrl" type="url" value="${escapeAttr(row.URL || '')}">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="secondary-button" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="save-button">Save</button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitAssignmentForm(event, id) {
+  event.preventDefault();
+  const data = {
+    id: id,
+    subjectCode: document.getElementById('assignmentSubject').value,
+    title: document.getElementById('assignmentTitle').value,
+    description: document.getElementById('assignmentDescription').value,
+    dueDate: document.getElementById('assignmentDueDate').value,
+    url: document.getElementById('assignmentUrl').value
+  };
+  await saveTeacherRecord('saveAssignment', data, 'Assignment saved.');
+}
+
+// =====================================================
+// ANNOUNCEMENTS MANAGER
+// =====================================================
+
+function renderAnnouncementsManager() {
+  const rows = teacherData.announcements || [];
+  document.getElementById('teacherContent').innerHTML = `
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div><h2>📢 Announcements</h2></div>
+        <button class="add-button" onclick="showAnnouncementForm()">+ Add Announcement</button>
+      </div>
+      ${buildGenericTable(rows, [
+        ['SUBJECT_CODE', 'Subject'],
+        ['TITLE', 'Title'],
+        ['DATE', 'Date']
+      ], 'showAnnouncementForm', 'deleteAnnouncement')}
+    </div>
+  `;
+}
+
+function showAnnouncementForm(id) {
+  const row = (teacherData.announcements || []).find(i => String(i.ID) === String(id)) || {};
+  openModal(id ? 'Edit Announcement' : 'Add Announcement', `
+    <form class="admin-form" onsubmit="submitAnnouncementForm(event, '${escapeJs(id || '')}')">
+      <div class="form-group">
+        <label>Subject</label>
+        <select id="announcementSubject" required>
+          <option value="">Select Subject</option>
+          ${buildSubjectOptions(row.SUBJECT_CODE)}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input id="announcementTitle" value="${escapeAttr(row.TITLE || '')}" required>
+      </div>
+      <div class="form-group">
+        <label>Message</label>
+        <textarea id="announcementMessage" required>${escapeHtml(row.MESSAGE || '')}</textarea>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input id="announcementDate" type="date" value="${escapeAttr(row.DATE || new Date().toISOString().slice(0,10))}">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="secondary-button" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="save-button">Save</button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitAnnouncementForm(event, id) {
+  event.preventDefault();
+  const data = {
+    id: id,
+    subjectCode: document.getElementById('announcementSubject').value,
+    title: document.getElementById('announcementTitle').value,
+    message: document.getElementById('announcementMessage').value,
+    date: document.getElementById('announcementDate').value
+  };
+  await saveTeacherRecord('saveAnnouncement', data, 'Announcement saved.');
+}
+
+// =====================================================
+// WHATSAPP MANAGER
+// =====================================================
+
+function renderWhatsappManager() {
+  const rows = teacherData.whatsapp || [];
+  document.getElementById('teacherContent').innerHTML = `
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div>
+          <h2>💬 WhatsApp Groups</h2>
+          <p>Add the WhatsApp group for each subject.</p>
+        </div>
+        <button class="add-button" onclick="showWhatsappForm()">+ Add Group</button>
+      </div>
+      ${buildGenericTable(rows, [
+        ['SUBJECT_CODE', 'Subject'],
+        ['GROUP_NAME', 'Group Name'],
+        ['GROUP_URL', 'Link']
+      ], 'showWhatsappForm', 'deleteWhatsapp')}
+    </div>
+  `;
+}
+
+function showWhatsappForm(id) {
+  const row = (teacherData.whatsapp || []).find(i => String(i.ID) === String(id)) || {};
+  openModal(id ? 'Edit WhatsApp Group' : 'Add WhatsApp Group', `
+    <form class="admin-form" onsubmit="submitWhatsappForm(event, '${escapeJs(id || '')}')">
+      <div class="form-group">
+        <label>Subject</label>
+        <select id="whatsappSubject" required>
+          <option value="">Select Subject</option>
+          ${buildSubjectOptions(row.SUBJECT_CODE)}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Group Name</label>
+        <input id="whatsappGroupName" value="${escapeAttr(row.GROUP_NAME || '')}" placeholder="22MAT201 CSE-A">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp Group Invite Link</label>
+        <input id="whatsappGroupUrl" type="url" value="${escapeAttr(row.GROUP_URL || '')}" placeholder="https://chat.whatsapp.com/..." required>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="secondary-button" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="save-button">Save</button>
+      </div>
+    </form>
+  `);
+}
+
+async function submitWhatsappForm(event, id) {
+  event.preventDefault();
+  const data = {
+    id: id,
+    subjectCode: document.getElementById('whatsappSubject').value,
+    groupName: document.getElementById('whatsappGroupName').value,
+    groupUrl: document.getElementById('whatsappGroupUrl').value
+  };
+  await saveTeacherRecord('saveWhatsapp', data, 'WhatsApp group saved.');
+}
+
+// =====================================================
+// ATTENDANCE MANAGER
+// =====================================================
+
+function renderAttendanceManager() {
+  const subjects = teacherData.subjects || [];
+  document.getElementById('teacherContent').innerHTML = `
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div>
+          <h2>📊 Attendance</h2>
+          <p>Select a subject and date.</p>
+        </div>
+      </div>
+      <div class="admin-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Subject</label>
+            <select id="attendanceSubject" onchange="loadAttendanceGrid()">
+              <option value="">Select Subject</option>
+              ${subjects.map(subject => `
+                <option value="${escapeAttr(subject.SUBJECT_CODE)}">
+                  ${escapeHtml(subject.SUBJECT_CODE + ' - ' + subject.SUBJECT_NAME)}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input id="attendanceDate" type="date" value="${new Date().toISOString().slice(0,10)}" onchange="loadAttendanceGrid()">
+          </div>
+        </div>
+      </div>
+      <div id="attendanceGridArea" style="margin-top:20px;"></div>
+    </div>
+  `;
+}
+
+function loadAttendanceGrid() {
+  const subjectCode = document.getElementById('attendanceSubject').value;
+  const date = document.getElementById('attendanceDate').value;
+  
+  if (!subjectCode || !date) {
+    document.getElementById('attendanceGridArea').innerHTML = '';
+    return;
+  }
+  
+  const subject = teacherData.subjects.find(i => String(i.SUBJECT_CODE) === String(subjectCode));
+  if (!subject) {
+    document.getElementById('attendanceGridArea').innerHTML = '<div class="empty-state">Subject not found. Please select a valid subject.</div>';
+    return;
+  }
+  
+  const students = (teacherData.students || []).filter(student => {
+    return String(student.BRANCH || '') === String(subject.BRANCH || '') &&
+           String(student.SEMESTER || '') === String(subject.SEMESTER || '') &&
+           String(student.DIVISION || '') === String(subject.DIVISION || '') &&
+           String(student.ACTIVE).toUpperCase() !== 'NO';
+  });
+  
+  if (!students.length) {
+    document.getElementById('attendanceGridArea').innerHTML = '<div class="empty-state">No students found for this subject/class.</div>';
+    return;
+  }
+  
+  const existing = (teacherData.attendance || []).filter(record => {
+    return String(record.SUBJECT_CODE) === String(subjectCode) && String(record.DATE) === String(date);
+  });
+  
+  const statusMap = {};
+  existing.forEach(record => { statusMap[record.STUDENT_ID] = record.STATUS || 'P'; });
+  
+  document.getElementById('attendanceGridArea').innerHTML = `
+    <div class="table-wrapper">
+      <table class="admin-table">
+        <thead><tr><th>Student ID</th><th>Name</th><th>Status</th></tr></thead>
+        <tbody>
+          ${students.map(student => {
+            const status = statusMap[student.STUDENT_ID] || 'P';
+            return `
+              <tr>
+                <td>${escapeHtml(student.STUDENT_ID)}</td>
+                <td>${escapeHtml(student.NAME)}</td>
+                <td>
+                  <select data-student-id="${escapeAttr(student.STUDENT_ID)}" class="attendance-status">
+                    <option value="P" ${status === 'P' ? 'selected' : ''}>Present</option>
+                    <option value="A" ${status === 'A' ? 'selected' : ''}>Absent</option>
+                    <option value="OD" ${status === 'OD' ? 'selected' : ''}>OD</option>
+                    <option value="L" ${status === 'L' ? 'selected' : ''}>Leave</option>
+                  </select>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:20px;text-align:right;">
+      <button class="save-button" onclick="submitAttendance()">💾 Submit Attendance</button>
+    </div>
+  `;
+}
+
+async function submitAttendance() {
+  const subjectCode = document.getElementById('attendanceSubject').value;
+  const date = document.getElementById('attendanceDate').value;
+  const selects = document.querySelectorAll('.attendance-status');
+  
+  const records = [];
+  selects.forEach(select => {
+    records.push({
+      subjectCode: subjectCode,
+      date: date,
+      studentId: select.dataset.studentId,
+      status: select.value
+    });
+  });
+  
+  showLoading(true);
+  try {
+    const result = await callAPI('saveAttendanceBatch', {
+      token: sessionToken,
+      data: { records: records }
+    });
+    showLoading(false);
+    showToast(result.message || 'Attendance submitted.');
+    await refreshTeacherData();
+  } catch (error) {
+    showLoading(false);
+    showToast(error.message || 'Unable to save attendance.');
+  }
+}
+
+// =====================================================
+// PROFILE MANAGER
+// =====================================================
+
+function renderProfileManager() {
+  const teacher = teacherData.teacher[0] || {};
+  document.getElementById('teacherContent').innerHTML = `
+    <div class="admin-panel">
+      <h2>👤 Teacher Profile</h2>
+      <form class="admin-form" onsubmit="submitProfileForm(event)">
+        <div class="form-group">
+          <label>Name</label>
+          <input id="profileName" value="${escapeAttr(teacher.NAME || '')}" required>
+        </div>
+        <div class="form-group">
+          <label>Designation</label>
+          <input id="profileDesignation" value="${escapeAttr(teacher.DESIGNATION || '')}">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input id="profileEmail" type="email" value="${escapeAttr(teacher.EMAIL || '')}">
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input id="profileUsername" value="${escapeAttr(teacher.USERNAME || '')}" required>
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input id="profilePassword" type="password" placeholder="Leave blank to keep current password">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="save-button">Update Profile</button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+async function submitProfileForm(event) {
+  event.preventDefault();
+  const data = {
+    name: document.getElementById('profileName').value,
+    designation: document.getElementById('profileDesignation').value,
+    email: document.getElementById('profileEmail').value,
+    username: document.getElementById('profileUsername').value,
+    newPassword: document.getElementById('profilePassword').value
+  };
+  
+  showLoading(true);
+  try {
+    const result = await callAPI('saveTeacherProfile', {
+      token: sessionToken,
+      data: data
+    });
+    showLoading(false);
+    showToast(result.message || 'Profile updated.');
+    await refreshTeacherData();
+  } catch (error) {
+    showLoading(false);
+    showToast(error.message || 'Unable to update profile.');
+  }
+}
+
+// =====================================================
+// GENERIC HELPERS
+// =====================================================
+
+function buildGenericTable(rows, columns, editFunction, deleteFunction) {
+  if (!rows.length) return '<div class="empty-state">No records found.</div>';
+  
+  return `
+    <div class="table-wrapper">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            ${columns.map(col => `<th>${escapeHtml(col[1])}</th>`).join('')}
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(row => `
+            <tr>
+              ${columns.map(col => {
+                let value = row[col[0]] || '';
+                if (col[0] === 'URL' || col[0] === 'GROUP_URL') {
+                  value = value ? `<a href="${safeUrl(value)}" target="_blank">Open</a>` : '';
+                }
+                return `<td>${value}</td>`;
+              }).join('')}
+              <td>
+                <button class="action-button edit-button" onclick="${editFunction}('${escapeJs(row.ID)}')">Edit</button>
+                <button class="action-button delete-button" onclick="deleteRecord('${deleteFunction}','${escapeJs(row.ID)}')">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function buildSubjectOptions(selected) {
+  return (teacherData.subjects || []).map(subject => `
+    <option value="${escapeAttr(subject.SUBJECT_CODE)}" ${String(selected || '') === String(subject.SUBJECT_CODE) ? 'selected' : ''}>
+      ${escapeHtml(subject.SUBJECT_CODE + ' - ' + subject.SUBJECT_NAME)}
+    </option>
+  `).join('');
+}
+
+// =====================================================
+// SERVER OPERATIONS
+// =====================================================
+
+async function saveTeacherRecord(functionName, data, message) {
+  showLoading(true);
+  try {
+    const result = await callAPI(functionName, { token: sessionToken, data: data });
+    showLoading(false);
+    closeModal();
+    showToast(result.message || message);
+    await refreshTeacherData();
+  } catch (error) {
+    showLoading(false);
+    showToast(error.message || 'Unable to save record.');
+  }
+}
+
+async function deleteRecord(functionName, id) {
+  if (!confirm('Are you sure you want to delete this record?')) return;
+  showLoading(true);
+  try {
+    const result = await callAPI(functionName, { token: sessionToken, id: id });
+    showLoading(false);
+    showToast(result.message || 'Record deleted.');
+    await refreshTeacherData();
+  } catch (error) {
+    showLoading(false);
+    showToast(error.message || 'Unable to delete record.');
+  }
+}
+
+async function refreshTeacherData() {
+  try {
+    const data = await callAPI('getTeacherDashboard', { token: sessionToken });
+    teacherData = data;
+    updateTeacherStats();
+    openTeacherTab(currentTeacherTab);
+  } catch (error) {
+    showToast(error.message || 'Session expired.');
+    sessionToken = null;
+    showTeacherLogin();
+  }
+}
+
+// =====================================================
+// LOGOUT
+// =====================================================
+
+async function logoutTeacher() {
+  if (!sessionToken) { showHome(); return; }
+  try {
+    await callAPI('teacherLogout', { token: sessionToken });
+    sessionToken = null;
+    teacherData = null;
+    showHome();
+  } catch (error) {
+    sessionToken = null;
+    teacherData = null;
+    showHome();
+  }
+}
+
+// =====================================================
+// MODAL
+// =====================================================
+
+function openModal(title, body) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+}
+
+// =====================================================
+// LOADING & TOAST
+// =====================================================
+
+function showLoading(show) {
+  const element = document.getElementById('loadingScreen');
+  if (!element) return;
+  element.style.display = show ? 'flex' : 'none';
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message || '';
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+// =====================================================
+// SECURITY HELPERS
+// =====================================================
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
+}
+
+function escapeJs(value) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
+}
+
+function safeUrl(url) {
+  const value = String(url || '').trim();
+  if (value.startsWith('https://') || value.startsWith('http://')) {
+    return escapeAttr(value);
+  }
+  return '#';
+}
