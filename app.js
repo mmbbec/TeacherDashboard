@@ -1345,3 +1345,42 @@ function safeUrl(url) {
   }
   return '#';
 }
+async function callAPI(action, params = {}) {
+  const url = new URL(CONFIG.API_URL);
+  url.searchParams.append('action', action);
+  
+  Object.keys(params).forEach(key => {
+    if (typeof params[key] === 'object') {
+      url.searchParams.append(key, JSON.stringify(params[key]));
+    } else {
+      url.searchParams.append(key, params[key]);
+    }
+  });
+  
+  try {
+    // Add timeout and credentials
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors',  // Explicitly set CORS mode
+      credentials: 'omit',  // Don't send cookies
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+    
+  } catch (error) {
+    console.error('API Error:', error);
+    return {
+      success: false,
+      message: error.message || 'Failed to connect to server'
+    };
+  }
+}
