@@ -1,261 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Subject Teacher Dashboard</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-<!-- =====================================================
-     LOADING SCREEN
-====================================================== -->
-<div id="loadingScreen" class="loading-screen">
-  <div class="loader"></div>
-  <div>Loading Dashboard...</div>
-</div>
-
-<!-- =====================================================
-     TOAST NOTIFICATION
-====================================================== -->
-<div id="toast" class="toast"></div>
-
-<!-- =====================================================
-     HOME PAGE
-====================================================== -->
-<section id="homePage" class="page active">
-  <header class="hero">
-    <div class="hero-content">
-      <div class="college-name" id="homeCollegeName">COLLEGE NAME</div>
-      <div class="department-name" id="homeDepartment">Department of Mathematics</div>
-      <div class="hero-title">📚 Subject Dashboard</div>
-      <p id="homeWelcome">Welcome to the Subject Dashboard</p>
-    </div>
-  </header>
-  
-  <main class="container">
-    <div class="entry-grid">
-      <button class="entry-card teacher-card" onclick="showTeacherLogin()">
-        <div class="entry-icon">👨‍🏫</div>
-        <div class="entry-title">Teacher</div>
-        <div class="entry-description">Login for complete control</div>
-      </button>
-      
-      <button class="entry-card student-card" onclick="showStudentDashboard()">
-        <div class="entry-icon">👨‍🎓</div>
-        <div class="entry-title">Student</div>
-        <div class="entry-description">View subjects and information</div>
-      </button>
-    </div>
-  </main>
-</section>
-
-<!-- =====================================================
-     TEACHER LOGIN PAGE
-====================================================== -->
-<section id="teacherLoginPage" class="page">
-  <div class="auth-wrapper">
-    <div class="auth-card">
-      <button class="back-button" onclick="showHome()">← Back</button>
-      <div class="auth-icon">👨‍🏫</div>
-      <h1>Teacher Login</h1>
-      <p class="muted">Login to manage your complete dashboard.</p>
-      
-      <form id="loginForm" onsubmit="handleLogin(event)">
-        <label>Username</label>
-        <input type="text" id="loginUsername" placeholder="Enter username" required>
-        
-        <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="Enter password" required>
-        
-        <button class="primary-button full-width" type="submit">🔐 Login</button>
-      </form>
-      
-      <div class="login-note">
-        Default login: username: <strong>teacher</strong> | password: <strong>teacher123</strong>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- =====================================================
-     STUDENT DASHBOARD PAGE
-====================================================== -->
-<section id="studentPage" class="page">
-  <header class="dashboard-header">
-    <div>
-      <button class="small-back" onclick="showHome()">← Home</button>
-      <div class="college-name" id="studentCollegeName">COLLEGE NAME</div>
-      <div class="department-name" id="studentDepartment">Department of Mathematics</div>
-    </div>
-  </header>
-
-  <main class="container">
-    <div class="profile-banner">
-      <div class="profile-icon">👨‍🏫</div>
-      <div>
-        <div class="small-label">SUBJECT TEACHER</div>
-        <h2 id="studentTeacherName">Teacher Name</h2>
-        <div id="studentTeacherDesignation">Assistant Professor</div>
-      </div>
-    </div>
-
-    <button class="subject-count-card" onclick="showStudentSubjects()">
-      <div class="count-icon">📚</div>
-      <div class="count-content">
-        <div class="count-number" id="studentSubjectCount">0</div>
-        <div class="count-label">Subjects Handled</div>
-      </div>
-      <div class="arrow">→</div>
-    </button>
-
-    <div id="studentSubjectsSection" class="hidden">
-      <div class="section-heading">
-        <h2>My Subjects</h2>
-        <p>Select a subject to continue.</p>
-      </div>
-      <div id="studentSubjectGrid" class="subject-grid"></div>
-    </div>
-  </main>
-</section>
-
-<!-- =====================================================
-     STUDENT SUBJECT DETAILS PAGE
-====================================================== -->
-<section id="studentSubjectPage" class="page">
-  <header class="dashboard-header">
-    <button class="small-back" onclick="backToStudentSubjects()">← Subjects</button>
-    <div class="college-name" id="detailCollegeName">COLLEGE NAME</div>
-    <div class="department-name" id="detailDepartment">Department of Mathematics</div>
-  </header>
-
-  <main class="container">
-    <div class="subject-detail-hero">
-      <div class="subject-code" id="detailSubjectCode">22MAT201</div>
-      <h1 id="detailSubjectName">Mathematics</h1>
-      <div id="detailSubjectInfo"></div>
-    </div>
-
-    <div class="info-grid">
-      <button class="info-card" onclick="showStudentResources()">
-        <span>📚</span>
-        <strong>Resources</strong>
-        <small>Notes and study materials</small>
-      </button>
-      <button class="info-card" onclick="showStudentTimetable()">
-        <span>📅</span>
-        <strong>Timetable</strong>
-        <small>Class schedule</small>
-      </button>
-      <button class="info-card" onclick="showStudentAssignments()">
-        <span>📝</span>
-        <strong>Assignments</strong>
-        <small>Tasks and submissions</small>
-      </button>
-      <button class="info-card" onclick="showStudentAnnouncements()">
-        <span>📢</span>
-        <strong>Announcements</strong>
-        <small>Important notices</small>
-      </button>
-      <button class="info-card" onclick="showStudentAttendance()">
-        <span>📊</span>
-        <strong>Attendance</strong>
-        <small>Attendance information</small>
-      </button>
-      <button class="info-card" onclick="openStudentWhatsapp()">
-        <span>💬</span>
-        <strong>WhatsApp</strong>
-        <small>Subject group</small>
-      </button>
-    </div>
-
-    <div id="studentContentArea" class="content-area">
-      <div class="empty-state">Select an option above.</div>
-    </div>
-  </main>
-</section>
-
-<!-- =====================================================
-     TEACHER DASHBOARD PAGE
-====================================================== -->
-<section id="teacherPage" class="page">
-  <header class="teacher-header">
-    <div>
-      <div class="small-label">TEACHER DASHBOARD</div>
-      <h1 id="teacherWelcome">Welcome</h1>
-    </div>
-    <button class="logout-button" onclick="logoutTeacher()">Logout</button>
-  </header>
-
-  <main class="teacher-container">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div>📚</div>
-        <strong id="teacherSubjectCount">0</strong>
-        <span>Subjects</span>
-      </div>
-      <div class="stat-card">
-        <div>👨‍🎓</div>
-        <strong id="teacherStudentCount">0</strong>
-        <span>Students</span>
-      </div>
-      <div class="stat-card">
-        <div>📄</div>
-        <strong id="teacherResourceCount">0</strong>
-        <span>Resources</span>
-      </div>
-      <div class="stat-card">
-        <div>📢</div>
-        <strong id="teacherAnnouncementCount">0</strong>
-        <span>Announcements</span>
-      </div>
-    </div>
-
-    <nav class="admin-tabs">
-      <button class="admin-tab active" onclick="openTeacherTab('overview', this)">🏠 Overview</button>
-      <button class="admin-tab" onclick="openTeacherTab('settings', this)">⚙️ Settings</button>
-      <button class="admin-tab" onclick="openTeacherTab('subjects', this)">📚 Subjects</button>
-      <button class="admin-tab" onclick="openTeacherTab('students', this)">👨‍🎓 Students</button>
-      <button class="admin-tab" onclick="openTeacherTab('resources', this)">📄 Resources</button>
-      <button class="admin-tab" onclick="openTeacherTab('timetable', this)">📅 Timetable</button>
-      <button class="admin-tab" onclick="openTeacherTab('assignments', this)">📝 Assignments</button>
-      <button class="admin-tab" onclick="openTeacherTab('announcements', this)">📢 Announcements</button>
-      <button class="admin-tab" onclick="openTeacherTab('attendance', this)">📊 Attendance</button>
-      <button class="admin-tab" onclick="openTeacherTab('whatsapp', this)">💬 WhatsApp</button>
-      <button class="admin-tab" onclick="openTeacherTab('profile', this)">👤 Profile</button>
-    </nav>
-
-    <div id="teacherContent">
-      <div class="admin-panel">
-        <h2>Dashboard Overview</h2>
-        <p>You have complete control over your subject dashboard.</p>
-        <div class="overview-note">
-          Changes saved here are immediately available to students through the same dashboard link.
+  <!-- Auth Dialog -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <h2>Welcome Back</h2>
+      <p>Log in to manage your classes</p>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="loginUser" class="form-control" placeholder="teacher" required />
         </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPass" class="form-control" placeholder="teacher123" required />
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Sign In</button>
+        <div style="text-align: center; margin-top: 1rem;">
+          <a href="#" id="viewAsStudent" style="color: var(--primary); font-size: 0.9rem;">Continue as Student (Read-Only)</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <i class="fa-solid fa-graduation-cap"></i> Teacher Hub
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-view="dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        <a class="nav-item" data-view="subjects"><i class="fa-solid fa-book"></i> Subjects</a>
+        <a class="nav-item" data-view="students"><i class="fa-solid fa-users"></i> Students</a>
+        <a class="nav-item" data-view="attendance"><i class="fa-solid fa-clipboard-check"></i> Attendance</a>
+        <a class="nav-item" data-view="timetable"><i class="fa-solid fa-calendar-days"></i> Timetable</a>
+        <a class="nav-item" data-view="assignments"><i class="fa-solid fa-file-lines"></i> Assignments</a>
+        <a class="nav-item" data-view="resources"><i class="fa-solid fa-folder-open"></i> Resources</a>
+        <a class="nav-item" data-view="announcements"><i class="fa-solid fa-bullhorn"></i> Announcements</a>
+        <a class="nav-item" data-view="whatsapp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <h3 id="currentViewTitle">Dashboard</h3>
+        <div class="user-profile">
+          <span id="userBadge" class="badge">Teacher</span>
+          <button id="logoutBtn" class="btn btn-secondary btn-sm">Switch / Logout</button>
+        </div>
+      </header>
+
+      <div class="content-area" id="dynamicContent">
+        <!-- Rendered via JS -->
       </div>
     </div>
-  </main>
-</section>
-
-<!-- =====================================================
-     MODAL
-====================================================== -->
-<div id="modalOverlay" class="modal-overlay hidden">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h2 id="modalTitle">Add</h2>
-      <button onclick="closeModal()">×</button>
-    </div>
-    <div id="modalBody"></div>
   </div>
-</div>
 
-<!-- =====================================================
-     SCRIPTS
-====================================================== -->
-<script src="config.js"></script>
-<script src="app.js"></script>
+  <!-- Dynamic Modal for CRUD -->
+  <div class="modal" id="crudModal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Edit Record</h3>
+      <form id="modalForm" style="margin-top: 1rem;">
+        <div id="modalFormFields"></div>
+        <div style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
