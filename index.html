@@ -1765,4 +1765,858 @@ function renderStudentSubjects(cont, user) {
               ${s.timetable.length > 3 ? `<div class="text-[11px]">+${s.timetable.length - 3} more</div>` : ''}
             </div>` : ''}
           <div class="mt-3 text-[12px] text-[#DC2626] font-semibold">View Details →</div>
-        </div>`).join('')
+        </div>`).join('')}
+    </div>`;
+}
+
+window.showSubjectDetailStudent = (id) => {
+  const s = subjects.find(x => x.id === id);
+  if (!s) { showToast('Subject not found', 'error'); return; }
+  const cont = document.getElementById('student-tab-content');
+  if (!cont) return;
+
+  const timetableHtml = (s.timetable || []).length > 0 ? `
+    <div class="mt-3"><h4 class="font-semibold text-[14px] text-[#1A0E0C] mb-1">📅 Timetable</h4>
+      ${s.timetable.map(t => `<div class="flex items-center gap-3 text-[13px] border-b border-[#F0E8E6] py-1.5 flex-wrap">
+        <span class="font-semibold w-[80px]">${t.day || ''}</span>
+        <span>${t.start || ''} – ${t.end || ''}</span>
+        <span class="text-[#6B5A55]">${t.room || ''}</span>
+        <span class="text-[#DC2626]">${t.topic || ''}</span>
+      </div>`).join('')}
+    </div>` : '';
+
+  const notesHtml = (s.notes || []).length > 0 ? `
+    <div class="mt-3"><h4 class="font-semibold text-[14px] text-[#1A0E0C] mb-1">📝 Notes</h4>
+      ${s.notes.map(n => `<div class="bg-[#FDFBFA] p-2 rounded border border-[#F0E8E6] mb-1.5 text-[13px]">
+        <span class="font-semibold">${n.title || ''}</span>
+        ${n.content ? `<div class="text-[#6B5A55] text-[12px]">${n.content}</div>` : ''}
+        ${n.linkUrl ? `<a href="${n.linkUrl}" target="_blank" class="text-[#DC2626] text-[12px] font-medium">🔗 Open</a>` : ''}
+      </div>`).join('')}
+    </div>` : '';
+
+  const syllabusHtml = s.syllabus ? `
+    <div class="mt-3"><h4 class="font-semibold text-[14px] text-[#1A0E0C] mb-1">📖 Syllabus</h4>
+      ${s.syllabus.content ? `<div class="bg-[#FDFBFA] p-3 rounded border border-[#F0E8E6] text-[13px] whitespace-pre-wrap">${s.syllabus.content}</div>` : ''}
+      ${s.syllabus.linkUrl ? `<a href="${s.syllabus.linkUrl}" target="_blank" class="text-[#DC2626] text-[13px] font-medium mt-1 inline-block">🔗 Open Syllabus</a>` : ''}
+    </div>` : '';
+
+  const resourcesHtml = (s.resources || []).length > 0 ? `
+    <div class="mt-3"><h4 class="font-semibold text-[14px] text-[#1A0E0C] mb-1">📁 Resources</h4>
+      ${s.resources.map(r => `<div class="bg-[#FDFBFA] p-2 rounded border border-[#F0E8E6] mb-1.5 text-[13px] flex items-center justify-between flex-wrap gap-2">
+        <span><span class="font-semibold">${r.title || ''}</span>
+        ${r.description ? `<span class="text-[#6B5A55] text-[12px]"> – ${r.description}</span>` : ''}</span>
+        ${r.linkUrl ? `<a href="${r.linkUrl}" target="_blank" class="text-[#DC2626] text-[12px] font-medium">🔗 Open</a>` : ''}
+      </div>`).join('')}
+    </div>` : '';
+
+  const empty = (!s.timetable || s.timetable.length === 0) &&
+                (!s.notes || s.notes.length === 0) &&
+                !s.syllabus &&
+                (!s.resources || s.resources.length === 0);
+
+  cont.innerHTML = `
+    <div class="card p-5">
+      <button class="btn-ghost text-[13px] mb-4" onclick="switchStudentTab('subjects')">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back to Subjects
+      </button>
+      <div class="flex items-center gap-2 mb-2 flex-wrap">
+        <span class="code-badge">${s.code}</span>
+        <span class="meta-tag">${s.semester || '—'}</span>
+        <span class="meta-tag">Div ${s.division || '—'}</span>
+        <span class="meta-tag">${s.branch || '—'}</span>
+      </div>
+      <h2 class="text-2xl font-bold font-display text-[#1A0E0C]">${s.name}</h2>
+      <p class="text-[13px] text-[#6B5A55]">🧑‍🎓 ${s.strength || 60} students</p>
+      ${timetableHtml}${notesHtml}${syllabusHtml}${resourcesHtml}
+      ${empty ? '<div class="mt-4 text-[13px] text-[#6B5A55]">No content available for this subject yet.</div>' : ''}
+    </div>`;
+};
+
+function renderStudentAttendance(cont, user) {
+  const mySubjects = getStudentSubjects(user);
+  const subjectIds = mySubjects.map(s => s.id);
+
+  const records = [];
+  for (const key in attendanceData) {
+    const rec = attendanceData[key];
+    if (!subjectIds.includes(rec.subjectId)) continue;
+    const subject = subjects.find(s => s.id === rec.subjectId);
+    if (!subject) continue;
+    const absentArr = Array.from(rec.absent || []);
+    const strength = parseInt(subject.strength) || 60;
+    records.push({
+      date: rec.date,
+      subjectCode: subject.code,
+      subjectName: subject.name,
+      absent: absentArr.sort((a, b) => a - b),
+      total: strength,
+      presentCount: strength - absentArr.length
+    });
+  }
+  records.sort((a, b) => b.date.localeCompare(a.date));
+
+  if (records.length === 0) {
+    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
+      📊 No attendance records available for your subjects yet.</div>`;
+    return;
+  }
+
+  const totalDays = records.length;
+  const totalPresent = records.reduce((a, r) => a + r.presentCount, 0);
+  const totalPossible = records.reduce((a, r) => a + r.total, 0);
+  const overallPercent = totalPossible > 0 ? Math.round((totalPresent / totalPossible) * 100) : 0;
+
+  cont.innerHTML = `
+    <div class="stats-grid mb-6">
+      <div class="stat-item"><div class="num">${totalDays}</div><div class="label">📅 Days Recorded</div></div>
+      <div class="stat-item"><div class="num">${overallPercent}%</div><div class="label">📊 Overall Attendance</div></div>
+      <div class="stat-item"><div class="num">${totalPresent}</div><div class="label">✅ Present</div></div>
+      <div class="stat-item"><div class="num">${totalPossible - totalPresent}</div><div class="label">❌ Absent</div></div>
+    </div>
+    <div class="card p-5 overflow-x-auto">
+      <h3 class="font-display font-semibold text-[#1A0E0C] mb-3 text-[15px]">📋 Attendance History</h3>
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Subject</th><th>Absent Roll Numbers</th><th>Present</th></tr></thead>
+        <tbody>
+          ${records.slice(0, 30).map(r => `
+            <tr>
+              <td><strong>${r.date}</strong></td>
+              <td><span class="font-mono text-[#DC2626] font-bold">${r.subjectCode}</span> ${r.subjectName}</td>
+              <td><span class="font-mono text-[#991B1B] font-semibold text-[12px]">${r.absent.length ? r.absent.join(', ') : 'None (All Present)'}</span></td>
+              <td><span class="badge-status present">${r.presentCount}/${r.total}</span></td>
+            </tr>`).join('')}
+          ${records.length > 30 ? `<tr><td colspan="4" class="text-center text-[#6B5A55] text-[12px]">Showing last 30 records.</td></tr>` : ''}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderStudentResources(cont, user) {
+  const mySubjects = getStudentSubjects(user);
+  const allItems = [];
+  mySubjects.forEach(s => {
+    (s.resources || []).forEach(r => allItems.push({ ...r, subjectName: s.name, subjectCode: s.code, kind: 'resource' }));
+    (s.notes || []).forEach(n => allItems.push({ ...n, subjectName: s.name, subjectCode: s.code, kind: 'note' }));
+    if (s.syllabus) allItems.push({ ...s.syllabus, subjectName: s.name, subjectCode: s.code, kind: 'syllabus', title: 'Syllabus' });
+  });
+
+  if (allItems.length === 0) {
+    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
+      📭 No resources or notes available for your subjects yet.</div>`;
+    return;
+  }
+
+  cont.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    ${allItems.map(item => `
+      <div class="card p-4">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="resource-type-badge">${item.kind}</span>
+          <span class="meta-tag">${item.subjectCode}</span>
+        </div>
+        <h4 class="font-semibold text-[15px] text-[#1A0E0C]">${item.title || 'Untitled'}</h4>
+        <p class="text-[12px] text-[#6B5A55]">${item.subjectName}</p>
+        ${item.description ? `<p class="text-[13px] text-[#1E1A18] mt-1">${item.description}</p>` : ''}
+        ${item.content ? `<p class="text-[13px] text-[#1E1A18] mt-1 whitespace-pre-wrap">${item.content}</p>` : ''}
+        ${item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-[#DC2626] text-[13px] font-medium hover:underline">
+          🔗 Open Link <span class="material-symbols-outlined text-[14px]">open_in_new</span></a>` : ''}
+      </div>`).join('')}
+  </div>`;
+}
+
+/* ============================================================
+   15. TEACHER PORTAL
+   ============================================================ */
+window.renderTeacherWebsite = () => {
+  const totalStudents = subjects.reduce((a, s) => a + (parseInt(s.strength) || 60), 0);
+  const c = document.getElementById('teacher-hero-subject-count');
+  const st = document.getElementById('teacher-hero-student-count');
+  const yr = document.getElementById('teacher-hero-year');
+  if (c)  c.textContent  = subjects.length;
+  if (st) st.textContent = totalStudents;
+  if (yr) yr.textContent = '2025-26';
+  switchTeacherTab(teacherTab);
+};
+
+window.switchTeacherTab = (tab) => {
+  teacherTab = tab;
+  document.querySelectorAll('#teacher-tab-bar .tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.teacherTab === tab));
+
+  const cont = document.getElementById('teacher-tab-content');
+  if (!cont) return;
+
+  if      (tab === 'home')       renderTeacherHome(cont);
+  else if (tab === 'subjects')   renderTeacherSubjects(cont);
+  else if (tab === 'attendance') renderTeacherAttendance(cont);
+  else if (tab === 'timetable')  renderTeacherTimetable(cont);
+  else if (tab === 'resources')  renderTeacherResources(cont);
+};
+
+function renderTeacherHome(cont) {
+  const totalStudents = subjects.reduce((a, s) => a + (parseInt(s.strength) || 60), 0);
+  const totalRes = subjects.reduce((a, s) => a + (s.resources || []).length + (s.notes || []).length, 0);
+  const totalSlots = subjects.reduce((a, s) => a + (s.timetable || []).length, 0);
+
+  cont.innerHTML = `
+    <div class="stats-grid mb-6">
+      <div class="stat-item"><div class="num">${subjects.length}</div><div class="label">📚 Subjects</div></div>
+      <div class="stat-item"><div class="num">${totalStudents}</div><div class="label">🧑‍🎓 Total Students</div></div>
+      <div class="stat-item"><div class="num">${totalRes}</div><div class="label">📄 Resources</div></div>
+      <div class="stat-item"><div class="num">${totalSlots}</div><div class="label">📅 Timetable Slots</div></div>
+    </div>
+    <div class="card p-5">
+      <h3 class="font-display font-semibold text-[#1A0E0C] mb-3 text-[15px]">📖 Today's Classes</h3>
+      ${renderTodaySchedule(subjects)}
+    </div>`;
+}
+
+function renderTeacherSubjects(cont) {
+  if (subjects.length === 0) {
+    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
+      📭 No subjects created yet. Click <b>Add Subject</b> to begin.</div>`;
+    return;
+  }
+  cont.innerHTML = `
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+      <h3 class="font-display font-semibold text-[#1A0E0C] text-[15px]">All Subjects</h3>
+      <button class="btn-primary text-[12px]" onclick="openAddSubjectModal()">
+        <span class="material-symbols-outlined text-[16px]">add</span> Add Subject
+      </button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${subjects.map(s => `
+        <div class="subject-card" onclick="openSubjectDetail('${s.id}','teacher')">
+          <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <span class="code-badge">${s.code}</span>
+            <span class="meta-tag">${s.semester || '—'}</span>
+          </div>
+          <h3 class="font-semibold text-[16px]">${s.name}</h3>
+          <p class="text-[12px] text-[#6B5A55]">Div ${s.division || '—'} • ${s.branch || '—'} • 🧑‍🎓 ${s.strength || 60}</p>
+          <div class="flex items-center gap-2 mt-2 text-[11px] text-[#6B5A55] flex-wrap">
+            <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.timetable || []).length} slots</span>
+            <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.notes || []).length} notes</span>
+            <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.resources || []).length} resources</span>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderTeacherAttendance(cont) {
+  const optionsHtml = subjects.map(s =>
+    `<option value="${s.id}">${s.code} - ${s.name} (${s.strength || 60})</option>`).join('');
+
+  cont.innerHTML = `
+    <div class="card p-5">
+      <div class="flex flex-wrap items-end gap-4 mb-4">
+        <div class="flex-1 min-w-[160px]">
+          <label class="form-label">Select Subject</label>
+          <select id="teacher-attendance-subject" class="form-select">${optionsHtml}</select>
+        </div>
+        <div class="flex-1 min-w-[150px]">
+          <label class="form-label">Date</label>
+          <input type="date" id="teacher-attendance-date" class="form-input">
+        </div>
+        <button class="btn-secondary flex-shrink-0" onclick="loadTeacherAttendance()">Load</button>
+      </div>
+
+      <h3 class="font-semibold text-[15px] mb-1">Click roll numbers of <span class="text-[#B91C1C]">ABSENT</span> students</h3>
+      <p class="text-[12px] text-[#6B5A55] mb-3" id="teacher-attendance-strength-info">Strength: --</p>
+      <div id="teacher-roll-grid" class="attendance-grid"></div>
+
+      <div class="attendance-controls">
+        <button class="btn-success" onclick="markTeacherAllPresent()">
+          <span class="material-symbols-outlined text-[18px]">check_circle</span> All Present
+        </button>
+        <button class="btn-danger" onclick="markTeacherAllAbsent()">
+          <span class="material-symbols-outlined text-[18px]">cancel</span> All Absent
+        </button>
+        <div class="selected-info" id="teacher-selected-info"><strong>Selected Absent:</strong> None / All Present</div>
+        <button class="btn-secondary" onclick="submitTeacherAttendance()">
+          <span class="material-symbols-outlined text-[18px]">save</span> Submit
+        </button>
+      </div>
+
+      <div class="mt-4">
+        <button class="btn-ghost text-[13px]" onclick="toggleTeacherHistory()">
+          <span class="material-symbols-outlined text-[18px]">history</span> Show History
+        </button>
+        <div id="teacher-attendance-history" class="hidden mt-4">
+          <h4 class="font-semibold text-[14px] mb-2">Attendance History</h4>
+          <div id="teacher-history-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+        </div>
+      </div>
+    </div>`;
+
+  if (subjects.length > 0) {
+    const sel = document.getElementById('teacher-attendance-subject');
+    sel.value = subjects[0].id;
+    document.getElementById('teacher-attendance-date').value = new Date().toISOString().split('T')[0];
+    loadTeacherAttendance();
+  }
+}
+
+let teacherSelectedAbsent = new Set();
+let teacherSubjectId = null;
+
+window.loadTeacherAttendance = () => {
+  const sid  = document.getElementById('teacher-attendance-subject')?.value;
+  const date = document.getElementById('teacher-attendance-date')?.value;
+  if (!sid || !date) { showToast('Select subject & date', 'error'); return; }
+
+  teacherSubjectId = sid;
+  const key = `${sid}_${date}`;
+  if (!attendanceData[key]) attendanceData[key] = { subjectId: sid, date, absent: new Set() };
+  teacherSelectedAbsent = attendanceData[key].absent;
+
+  const subj = subjects.find(s => s.id === sid);
+  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
+
+  const info = document.getElementById('teacher-attendance-strength-info');
+  if (info) info.textContent = `Strength: ${strength} students (Roll 1–${strength}) • LIVE doc: attendance/${key}`;
+
+  const grid = document.getElementById('teacher-roll-grid');
+  let html = '';
+  for (let i = 1; i <= strength; i++) {
+    html += `<button class="roll-btn ${teacherSelectedAbsent.has(i) ? 'absent' : ''}" onclick="toggleTeacherRoll(${i})">${i}</button>`;
+  }
+  if (grid) grid.innerHTML = html;
+  updateTeacherSelectedInfo();
+};
+
+window.toggleTeacherRoll = (roll) => {
+  if (teacherSelectedAbsent.has(roll)) teacherSelectedAbsent.delete(roll);
+  else teacherSelectedAbsent.add(roll);
+  const key = `${teacherSubjectId}_${document.getElementById('teacher-attendance-date').value}`;
+  if (attendanceData[key]) attendanceData[key].absent = teacherSelectedAbsent;
+  const subj = subjects.find(s => s.id === teacherSubjectId);
+  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
+  const grid = document.getElementById('teacher-roll-grid');
+  let html = '';
+  for (let i = 1; i <= strength; i++) {
+    html += `<button class="roll-btn ${teacherSelectedAbsent.has(i) ? 'absent' : ''}" onclick="toggleTeacherRoll(${i})">${i}</button>`;
+  }
+  if (grid) grid.innerHTML = html;
+  updateTeacherSelectedInfo();
+};
+
+window.markTeacherAllPresent = () => {
+  teacherSelectedAbsent.clear();
+  const key = `${teacherSubjectId}_${document.getElementById('teacher-attendance-date').value}`;
+  if (attendanceData[key]) attendanceData[key].absent = teacherSelectedAbsent;
+  loadTeacherAttendance();
+};
+
+window.markTeacherAllAbsent = () => {
+  const subj = subjects.find(s => s.id === teacherSubjectId);
+  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
+  for (let i = 1; i <= strength; i++) teacherSelectedAbsent.add(i);
+  const key = `${teacherSubjectId}_${document.getElementById('teacher-attendance-date').value}`;
+  if (attendanceData[key]) attendanceData[key].absent = teacherSelectedAbsent;
+  loadTeacherAttendance();
+};
+
+function updateTeacherSelectedInfo() {
+  const el = document.getElementById('teacher-selected-info');
+  if (!el) return;
+  if (teacherSelectedAbsent.size === 0) {
+    el.innerHTML = '<strong>Selected Absent:</strong> None / All Present';
+  } else {
+    el.innerHTML = `<strong>Selected Absent (${teacherSelectedAbsent.size}):</strong> ` +
+      Array.from(teacherSelectedAbsent).sort((a, b) => a - b).join(', ');
+  }
+}
+
+window.submitTeacherAttendance = async () => {
+  const date = document.getElementById('teacher-attendance-date').value;
+  const sid = teacherSubjectId;
+  if (!sid || !date) { showToast('Select subject & date', 'error'); return; }
+
+  const key = `${sid}_${date}`;
+  const rec = { subjectId: sid, date, absent: teacherSelectedAbsent };
+
+  try {
+    await saveAttendanceToFirebase(key, rec);
+    attendanceData[key] = rec;
+    const subj = subjects.find(s => s.id === sid);
+    const strength = subj ? (parseInt(subj.strength) || 60) : 60;
+    const present = strength - teacherSelectedAbsent.size;
+    showToast(`✅ Saved to LIVE Firebase: <b>attendance/${key}</b><br>Present: ${present}, Absent: ${teacherSelectedAbsent.size}`, 'success');
+  } catch (err) { showToast('Save failed: ' + err.message, 'error'); }
+};
+
+window.toggleTeacherHistory = () => {
+  const div = document.getElementById('teacher-attendance-history');
+  const hidden = div.classList.contains('hidden');
+  div.classList.toggle('hidden');
+  if (hidden) renderTeacherHistory();
+};
+
+function renderTeacherHistory() {
+  const list = document.getElementById('teacher-history-list');
+  if (!list) return;
+  const sid = teacherSubjectId;
+  const records = [];
+  for (const k in attendanceData) {
+    if (attendanceData[k].subjectId === sid) records.push(attendanceData[k]);
+  }
+  if (records.length === 0) {
+    list.innerHTML = '<div class="text-[13px] text-[#6B5A55]">No attendance records for this subject.</div>';
+    return;
+  }
+  const subj = subjects.find(s => s.id === sid);
+  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
+
+  list.innerHTML = records.sort((a, b) => b.date.localeCompare(a.date)).map(r => {
+    const absentArr = Array.from(r.absent || []).sort((a, b) => a - b);
+    const present = strength - absentArr.length;
+    return `<div class="history-item">
+      <div>
+        <div class="date">📅 ${r.date}</div>
+        <div class="text-[12px] text-[#6B5A55]">${absentArr.length} absent • ${present} present</div>
+      </div>
+      <div class="flex gap-2 items-center flex-wrap">
+        <span class="badge-status present">${present} Present</span>
+        <span class="badge-status absent">${absentArr.length} Absent</span>
+        ${absentArr.length > 0 ? `<span class="text-[11px] text-[#6B5A55]">Rolls: ${absentArr.slice(0, 12).join(', ')}${absentArr.length > 12 ? '…' : ''}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTeacherTimetable(cont) {
+  if (subjects.length === 0) {
+    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">📭 No subjects available.</div>`;
+    return;
+  }
+
+  let html = `
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+      <h3 class="font-display font-semibold text-[#1A0E0C] text-[15px]">📅 Timetable Overview</h3>
+    </div>
+    <div class="space-y-4">`;
+
+  subjects.forEach(s => {
+    const slots = s.timetable || [];
+    html += `
+      <div class="card p-4">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="code-badge">${s.code}</span>
+            <span class="font-semibold text-[15px] text-[#1A0E0C]">${s.name}</span>
+          </div>
+          <button class="btn-ghost text-[11px]" onclick="openSubjectDetail('${s.id}','teacher')">
+            <span class="material-symbols-outlined text-[14px]">edit</span>Manage
+          </button>
+        </div>
+        ${slots.length === 0
+          ? '<p class="text-[13px] text-[#6B5A55]">No timetable slots added yet.</p>'
+          : `<div class="overflow-x-auto"><table class="data-table">
+              <thead><tr><th>Day</th><th>Time</th><th>Room</th><th>Topic</th></tr></thead>
+              <tbody>${slots.map(t => `
+                <tr>
+                  <td class="font-semibold">${t.day || ''}</td>
+                  <td>${t.start || ''} – ${t.end || ''}</td>
+                  <td>${t.room || ''}</td>
+                  <td>${t.topic || ''}</td>
+                </tr>`).join('')}
+              </tbody></table></div>`}
+        <div class="mt-2 text-[12px] text-[#6B5A55]">
+          🧑‍🎓 ${s.strength || 60} registered • Div ${s.division || '—'} • ${s.branch || '—'}
+        </div>
+      </div>`;
+  });
+
+  html += `</div>`;
+  cont.innerHTML = html;
+}
+
+function renderTeacherResources(cont) {
+  const allItems = [];
+  subjects.forEach(s => {
+    (s.resources || []).forEach(r => allItems.push({ ...r, subjectName: s.name, subjectCode: s.code, kind: 'resource' }));
+    (s.notes || []).forEach(n => allItems.push({ ...n, subjectName: s.name, subjectCode: s.code, kind: 'note' }));
+    if (s.syllabus) allItems.push({ ...s.syllabus, subjectName: s.name, subjectCode: s.code, kind: 'syllabus', title: 'Syllabus' });
+  });
+
+  if (allItems.length === 0) {
+    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
+      📭 No resources or notes available across all subjects.</div>`;
+    return;
+  }
+
+  cont.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    ${allItems.map(item => `
+      <div class="card p-4">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="resource-type-badge">${item.kind}</span>
+          <span class="meta-tag">${item.subjectCode}</span>
+        </div>
+        <h4 class="font-semibold text-[15px] text-[#1A0E0C]">${item.title || 'Untitled'}</h4>
+        <p class="text-[12px] text-[#6B5A55]">${item.subjectName}</p>
+        ${item.description ? `<p class="text-[13px] text-[#1E1A18] mt-1">${item.description}</p>` : ''}
+        ${item.content ? `<p class="text-[13px] text-[#1E1A18] mt-1 whitespace-pre-wrap">${item.content}</p>` : ''}
+        ${item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-[#DC2626] text-[13px] font-medium hover:underline">
+          🔗 Open Link <span class="material-symbols-outlined text-[14px]">open_in_new</span></a>` : ''}
+      </div>`).join('')}
+  </div>`;
+}
+
+/* ============================================================
+   16. ADMIN — USERS & SETTINGS
+   ============================================================ */
+window.renderAdminUsers = async () => {
+  const users = await getUsers();
+  const tbody = document.getElementById('admin-users-table');
+  if (!tbody) return;
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td class="font-semibold">${u.name || '—'}</td>
+      <td class="text-[13px]">${u.email}</td>
+      <td><span class="bg-[#FEF2F2] text-[#B91C1C] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">${u.role || '—'}</span></td>
+      <td class="text-[12px]">${u.semester || '—'} / ${u.division || '—'} / ${u.branch || '—'}</td>
+      <td class="text-right">
+        ${u.email !== 'mmbbec@gmail.com'
+          ? `<button class="text-[11px] bg-[#FEE2E2] text-[#991B1B] px-2 py-1 rounded font-semibold" onclick="deleteUser('${u.email}')">Delete LIVE</button>`
+          : '<span class="text-[#6B5A55] text-[11px] font-medium">Protected</span>'}
+      </td>
+    </tr>`).join('');
+};
+
+window.deleteUser = async (email) => {
+  if (email === 'mmbbec@gmail.com') { showToast('Cannot delete admin', 'error'); return; }
+  if (!confirm('Delete ' + email + ' from LIVE Firebase bec-bagalkote-rutu?')) return;
+  try {
+    await deleteDoc(doc(db, 'users', email));
+    showToast('User deleted from LIVE Firebase', 'info');
+    renderAdminUsers();
+  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
+};
+
+window.renderAdminSettings = () => {
+  const ay = document.getElementById('academic-year');
+  const st = document.getElementById('semester-type');
+  if (ay) ay.value = localStorage.getItem('bec_academic_year') || '2025-26';
+  if (st) st.value = localStorage.getItem('bec_semester_type') || 'ODD';
+};
+
+window.saveAcademicSettings = async () => {
+  const year = document.getElementById('academic-year').value.trim() || '2025-26';
+  const type = document.getElementById('semester-type').value;
+  localStorage.setItem('bec_academic_year', year);
+  localStorage.setItem('bec_semester_type', type);
+  try {
+    await setDoc(doc(db, 'colleges', 'bec_bagalkote_001'), {
+      name: 'Basaveshwar Engineering College Bagalkote',
+      code: '2BA',
+      branches: DEFAULT_BRANCHES,
+      divisions: DEFAULT_DIVISIONS,
+      semesters: DEFAULT_SEMS,
+      studentsPerDiv: 60,
+      academicYear: year,
+      semesterType: type,
+      projectId: 'bec-bagalkote-rutu',
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    showToast('✅ Saved to LIVE Firebase: colleges/bec_bagalkote_001', 'success');
+  } catch (err) { showToast('Save failed: ' + err.message, 'error'); }
+};
+
+/* ============================================================
+   17. SUBJECT MODAL (Add / Edit)
+   ============================================================ */
+window.openAddSubjectModal = () => {
+  document.getElementById('subject-modal-title').textContent = 'Add Subject to LIVE Firebase';
+  document.getElementById('subject-form-id').value = '';
+  document.getElementById('subject-name').value = '';
+  document.getElementById('subject-code').value = '';
+  document.getElementById('subject-strength').value = '60';
+  populateAcademicDropdowns();
+  document.getElementById('subject-modal').classList.remove('hidden');
+};
+
+window.openEditSubjectModal = (id) => {
+  const s = subjects.find(x => x.id === id);
+  if (!s) { showToast('Subject not found', 'error'); return; }
+  document.getElementById('subject-modal-title').textContent = 'Edit Subject in LIVE Firebase';
+  document.getElementById('subject-form-id').value = s.id;
+  document.getElementById('subject-name').value = s.name;
+  document.getElementById('subject-code').value = s.code;
+  document.getElementById('subject-strength').value = s.strength || 60;
+  populateAcademicDropdowns();
+
+  /* keep custom values if not in the default lists */
+  const semSel = document.getElementById('subject-semester');
+  const divSel = document.getElementById('subject-division');
+  const brSel  = document.getElementById('subject-branch');
+
+  if (s.semester && !DEFAULT_SEMS.includes(s.semester))
+    semSel.innerHTML += `<option value="${s.semester}">${s.semester}</option>`;
+  if (s.division && !DEFAULT_DIVISIONS.includes(s.division))
+    divSel.innerHTML += `<option value="${s.division}">${s.division}</option>`;
+  if (s.branch && !DEFAULT_BRANCHES.includes(s.branch))
+    brSel.innerHTML += `<option value="${s.branch}">${s.branch}</option>`;
+
+  semSel.value = s.semester || DEFAULT_SEMS[0];
+  divSel.value = s.division || DEFAULT_DIVISIONS[0];
+  brSel.value  = s.branch   || DEFAULT_BRANCHES[0];
+
+  document.getElementById('subject-modal').classList.remove('hidden');
+};
+
+window.closeSubjectModal = () => document.getElementById('subject-modal').classList.add('hidden');
+
+window.handleSubjectSubmit = async (e) => {
+  e.preventDefault();
+
+  const id       = document.getElementById('subject-form-id').value || Date.now().toString();
+  const name     = document.getElementById('subject-name').value.trim();
+  const code     = document.getElementById('subject-code').value.trim();
+  const semester = document.getElementById('subject-semester').value;
+  const division = document.getElementById('subject-division').value;
+  const branch   = document.getElementById('subject-branch').value;
+  const strength = parseInt(document.getElementById('subject-strength').value) || 60;
+
+  if (!name || !code) { showToast('Name and Code are required', 'error'); return; }
+  if (strength < 1)   { showToast('Strength must be at least 1', 'error'); return; }
+
+  /* duplicate check (same code + branch + sem + div, excluding self) */
+  const duplicate = subjects.some(s =>
+    s.id !== id &&
+    s.code.toLowerCase() === code.toLowerCase() &&
+    s.branch === branch &&
+    s.semester === semester &&
+    s.division === division
+  );
+  if (duplicate) {
+    showToast(`Subject code "${code}" already exists for this branch / sem / division.`, 'error');
+    return;
+  }
+
+  const existing = subjects.find(s => s.id === id);
+  const subj = {
+    id, name, code, semester, division, branch, strength,
+    timetable: existing?.timetable || [],
+    notes:     existing?.notes     || [],
+    resources: existing?.resources || [],
+    syllabus:  existing?.syllabus  || null,
+    collegeId: 'bec_bagalkote_001'
+  };
+
+  try {
+    await saveSubjectToFirebase(subj);
+    closeSubjectModal();
+    showToast(`✅ LIVE Firebase: Subject <b>${code}</b> saved! Div ${division} • ${strength} students`, 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Save failed: ' + err.message, 'error');
+  }
+};
+
+window.deleteSubject = async (id) => {
+  const s = subjects.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm(`Delete "${s.code} - ${s.name}" from LIVE Firebase?\nAll attendance records for this subject will also be deleted.`)) return;
+  try {
+    await deleteSubjectFromFirebase(id);
+    /* delete related attendance docs */
+    for (const k in attendanceData) {
+      if (attendanceData[k].subjectId === id) {
+        await deleteDoc(doc(db, 'attendance', k));
+        delete attendanceData[k];
+      }
+    }
+    if (currentSubjectId === id) { currentSubjectId = null; switchView(previousView || 'my-subjects'); }
+    showToast('Subject deleted from LIVE Firebase', 'info');
+  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
+};
+
+/* ============================================================
+   18. VIEW ROUTING & SIDEBAR
+   ============================================================ */
+window.switchView = (view) => {
+  currentView = view;
+
+  document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+  const target = document.getElementById('view-' + view);
+  if (target) target.classList.remove('hidden');
+
+  document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+  /* keep the parent link active when inside subject-detail */
+  const linkView = (view === 'subject-detail') ? 'my-subjects' : view;
+  const link = document.querySelector(`.sidebar-link[data-view="${linkView}"]`);
+  if (link) link.classList.add('active');
+
+  const titles = {
+    dashboard: 'Dashboard',
+    'my-subjects': 'My Subjects',
+    'subject-detail': 'Subject Details',
+    attendance: 'Attendance',
+    student: 'Student Portal',
+    teacher: 'Faculty Portal',
+    'admin-users': 'User Management',
+    'admin-settings': 'Settings'
+  };
+  const pt = document.getElementById('page-title');
+  if (pt) pt.textContent = (titles[view] || view) + ' 🔥 LIVE';
+
+  if      (view === 'dashboard')      renderDashboard();
+  else if (view === 'my-subjects')    renderMySubjects();
+  else if (view === 'subject-detail') renderSubjectDetail();
+  else if (view === 'attendance')     renderAttendanceView();
+  else if (view === 'student')        renderStudentWebsite();
+  else if (view === 'teacher')        renderTeacherWebsite();
+  else if (view === 'admin-users')    renderAdminUsers();
+  else if (view === 'admin-settings') renderAdminSettings();
+
+  if (window.innerWidth <= 768) toggleSidebar(false);
+};
+
+window.toggleSidebar = (force) => {
+  const sb = document.querySelector('.sidebar-fixed');
+  const bd = document.getElementById('sidebar-backdrop');
+  if (!sb || !bd) return;
+  const isOpen = sb.classList.contains('open');
+  const newState = force !== undefined ? force : !isOpen;
+  if (newState) {
+    sb.classList.add('open');
+    bd.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  } else {
+    sb.classList.remove('open');
+    bd.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+};
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    const sb = document.querySelector('.sidebar-fixed');
+    const bd = document.getElementById('sidebar-backdrop');
+    if (sb && bd) { sb.classList.remove('open'); bd.classList.remove('open'); }
+    document.body.style.overflow = '';
+  }
+});
+
+/* ============================================================
+   19. INIT APP
+   ============================================================ */
+async function initApp() {
+  const user = getCurrentUser();
+  if (!user) {
+    document.getElementById('auth-container').classList.remove('hidden');
+    document.getElementById('app-wrapper').classList.remove('show');
+    return;
+  }
+
+  document.getElementById('auth-container').classList.add('hidden');
+  document.getElementById('app-wrapper').classList.add('show');
+
+  const initial = (user.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  document.getElementById('sidebar-avatar').textContent = initial;
+  document.getElementById('sidebar-name').textContent   = user.name || 'User';
+  document.getElementById('sidebar-role').textContent   =
+    user.role === 'admin' ? 'Administrator · LIVE' :
+    user.role === 'teacher' ? 'Faculty · LIVE' : 'Student · LIVE';
+  document.getElementById('sidebar-academic').textContent =
+    `${user.semester || ''}${user.division ? ' · Div ' + user.division : ''}${user.branch ? ' · ' + user.branch : ''}`;
+  document.getElementById('header-user').textContent   = user.name || 'User';
+  document.getElementById('header-avatar').textContent = initial;
+
+  const nav = document.getElementById('sidebar-nav');
+  let links = '';
+
+  if (user.role === 'admin') {
+    links = `
+      <a class="sidebar-link active" data-view="dashboard" href="#" onclick="switchView('dashboard');return false;"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+      <a class="sidebar-link" data-view="my-subjects" href="#" onclick="switchView('my-subjects');return false;"><span class="material-symbols-outlined">auto_stories</span>My Subjects</a>
+      <a class="sidebar-link" data-view="attendance" href="#" onclick="switchView('attendance');return false;"><span class="material-symbols-outlined">fact_check</span>Attendance</a>
+      <a class="sidebar-link" data-view="student" href="#" onclick="switchView('student');return false;"><span class="material-symbols-outlined">visibility</span>Student View</a>
+      <a class="sidebar-link" data-view="teacher" href="#" onclick="switchView('teacher');return false;"><span class="material-symbols-outlined">school</span>Teacher View</a>
+      <a class="sidebar-link" data-view="admin-users" href="#" onclick="switchView('admin-users');return false;"><span class="material-symbols-outlined">people</span>Users</a>
+      <a class="sidebar-link" data-view="admin-settings" href="#" onclick="switchView('admin-settings');return false;"><span class="material-symbols-outlined">settings</span>Settings</a>`;
+  } else if (user.role === 'teacher') {
+    links = `
+      <a class="sidebar-link active" data-view="teacher" href="#" onclick="switchView('teacher');return false;"><span class="material-symbols-outlined">home</span>Home</a>
+      <a class="sidebar-link" data-view="my-subjects" href="#" onclick="switchView('my-subjects');return false;"><span class="material-symbols-outlined">auto_stories</span>My Subjects</a>
+      <a class="sidebar-link" data-view="attendance" href="#" onclick="switchView('attendance');return false;"><span class="material-symbols-outlined">fact_check</span>Attendance</a>`;
+  } else {
+    links = `
+      <a class="sidebar-link active" data-view="student" href="#" onclick="switchView('student');return false;"><span class="material-symbols-outlined">home</span>Student Home</a>`;
+  }
+  nav.innerHTML = links;
+
+  populateAcademicDropdowns();
+  await loadAttendanceDataFirebase();
+  loadSubjectsLive();
+
+  if      (user.role === 'student') switchView('student');
+  else if (user.role === 'teacher') switchView('teacher');
+  else                              switchView('dashboard');
+}
+
+/* ============================================================
+   20. BOOT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async () => {
+  populateAcademicDropdowns();
+
+  /* hide branch group initially (teacher default) */
+  const bg = document.getElementById('branch-group');
+  if (bg) bg.style.display = 'none';
+
+  await loadAttendanceDataFirebase();
+
+  const session = getSession();
+  if (session) {
+    initApp();
+  } else {
+    document.getElementById('auth-container').classList.remove('hidden');
+    document.getElementById('app-wrapper').classList.remove('show');
+    showLogin();
+  }
+});
+
+/* ============================================================
+   21. EXPOSE ALL HANDLERS TO GLOBAL SCOPE (for inline onclick)
+   ============================================================ */
+Object.assign(window, {
+  /* auth */
+  handleLogin, handleSignup, showLogin, showSignup, selectRole,
+  getSession, getCurrentUser, logout,
+  /* views */
+  switchView, toggleSidebar, renderAll,
+  /* subjects */
+  openAddSubjectModal, openEditSubjectModal, closeSubjectModal, handleSubjectSubmit, deleteSubject,
+  /* subject detail */
+  openSubjectDetail, goBackFromSubjectDetail, openEditCurrentSubject,
+  switchSubjectTab, renderSubjectDetail,
+  /* timetable */
+  openTimetableModal, closeTimetableModal, handleTimetableSubmit, deleteTimetableSlot,
+  /* notes */
+  openNoteModal, closeNoteModal, handleNoteSubmit, deleteNote,
+  /* syllabus */
+  openSyllabusModal, closeSyllabusModal, handleSyllabusSubmit,
+  /* resources */
+  openResourceModal, closeResourceModal, handleResourceSubmit, deleteResource,
+  /* attendance */
+  renderAttendanceView, loadAttendance, toggleRoll,
+  markAllPresent, markAllAbsent, updateSelectedInfo, submitAttendance,
+  toggleAttendanceHistory, renderHistory,
+  /* student */
+  renderStudentWebsite, switchStudentTab, showSubjectDetailStudent,
+  /* teacher */
+  renderTeacherWebsite, switchTeacherTab,
+  loadTeacherAttendance, toggleTeacherRoll,
+  markTeacherAllPresent, markTeacherAllAbsent, submitTeacherAttendance,
+  toggleTeacherHistory,
+  /* admin */
+  renderAdminUsers, deleteUser, renderAdminSettings, saveAcademicSettings,
+  /* helpers */
+  populateAcademicDropdowns, getStudentSubjects, patchSubject
+});
+
+console.log('%c🔥 BEC Bagalkote · LIVE Firebase bec-bagalkote-rutu ready', 'color:#0B7B4D;font-weight:700');
+</script>
+</body>
+</html>
