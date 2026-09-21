@@ -725,10 +725,9 @@ const firebaseConfig = {
   measurementId: "G-HCYJFG2KGK"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
+const db  = getFirestore(app);
+window.db = db;
 
 const statusEl = document.getElementById('firebase-status');
 statusEl.textContent = "🟢 LIVE bec-bagalkote-rutu CONNECTED";
@@ -2204,4 +2203,415 @@ function renderTeacherTimetable(cont) {
     html += `
       <div class="card p-4">
         <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
-          <div class="flex
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="code-badge">${s.code}</span>
+            <span class="font-semibold text-[15px] text-[#1A0E0C]">${s.name}</span>
+          </div>
+          <button class="btn-ghost text-[11px]" onclick="openSubjectDetail('${s.id}','teacher')">
+            <span class="material-symbols-outlined text-[14px]">edit</span>Manage
+          </button>
+        </div>
+        ${slots.length === 0
+          ? '<p class="text-[13px] text-[#6B5A55]">No timetable slots added yet.</p>'
+          : `<div class="overflow-x-auto"><table class="data-table">
+              <thead><tr><th>Day</th><th>Time</th><th>Room</th><th>Topic</th></tr></thead>
+              <tbody>${slots.map(t => `
+                <tr>
+                  <td class="font-semibold">${t.day || ''}</td>
+                  <td>${t.start || ''} – ${t.end || ''}</td>
+                  <td>${t.room || ''}</td>
+                  <td>${t.topic || ''}</td>
+                </tr>`).join('')}
+              </tbody></table></div>`}
+        <div class="mt-2 text-[12px] text-[#6B5A55]">
+          🧑‍🎓 ${s.strength || 60} registered • Div ${s.division || '—'} • ${s.branch || '—'}
+        </div>
+      </div>`;
+  });
+
+  html += `</div>`;
+  cont.innerHTML = html;
+}
+
+function renderTeacherResources(cont) {
+  const allItems = [];
+  subjects.forEach(s => {
+    (s.resources || []).forEach(r => allItems.push({ ...r, subjectName: s.name, subjectCode: s.code, kind: 'resource' }));
+    (s.notes || []).forEach(n => allItems.push({ ...n, subjectName: s.name, subjectCode: s.code, kind: 'note' }));
+    if (s.syllabus) allItems.push({ ...s.syllabus, subjectName: s.name, subjectCode: s.code, kind: 'syllabus', title: 'Syllabus' });
+  });
+
+  if (allItems.length === 0) {
+    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
+      📭 No resources or notes available across all subjects.</div>`;
+    return;
+  }
+
+  cont.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    ${allItems.map(item => `
+      <div class="card p-4">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="resource-type-badge">${item.kind}</span>
+          <span class="meta-tag">${item.subjectCode}</span>
+        </div>
+        <h4 class="font-semibold text-[15px] text-[#1A0E0C]">${item.title || 'Untitled'}</h4>
+        <p class="text-[12px] text-[#6B5A55]">${item.subjectName}</p>
+        ${item.description ? `<p class="text-[13px] text-[#1E1A18] mt-1">${item.description}</p>` : ''}
+        ${item.content ? `<p class="text-[13px] text-[#1E1A18] mt-1 whitespace-pre-wrap">${item.content}</p>` : ''}
+        ${item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-[#DC2626] text-[13px] font-medium hover:underline">
+          🔗 Open Link <span class="material-symbols-outlined text-[14px]">open_in_new</span></a>` : ''}
+      </div>`).join('')}
+  </div>`;
+}
+
+/* ============================================================
+   16. ADMIN — USERS & SETTINGS
+   ============================================================ */
+window.renderAdminUsers = async () => {
+  const users = await getUsers();
+  const tbody = document.getElementById('admin-users-table');
+  if (!tbody) return;
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td class="font-semibold">${u.name || '—'}</td>
+      <td class="text-[13px]">${u.email}</td>
+      <td><span class="bg-[#FEF2F2] text-[#B91C1C] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">${u.role || '—'}</span></td>
+      <td class="text-[12px]">${u.semester || '—'} / ${u.division || '—'} / ${u.branch || '—'}</td>
+      <td class="text-right">
+        ${u.email !== 'mmbbec@gmail.com'
+          ? `<button class="text-[11px] bg-[#FEE2E2] text-[#991B1B] px-2 py-1 rounded font-semibold" onclick="deleteUser('${u.email}')">Delete</button>`
+          : '<span class="text-[#6B5A55] text-[11px] font-medium">Protected</span>'}
+      </td>
+    </tr>`).join('');
+};
+
+window.deleteUser = async (email) => {
+  if (email === 'mmbbec@gmail.com') { showToast('Cannot delete admin', 'error'); return; }
+  if (!confirm('Delete ' + email + '?')) return;
+  try {
+    await deleteDoc(doc(db, 'users', email));
+    showToast('User deleted', 'info');
+    renderAdminUsers();
+  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
+};
+
+window.renderAdminSettings = () => {
+  const ay = document.getElementById('academic-year');
+  const st = document.getElementById('semester-type');
+  if (ay) ay.value = localStorage.getItem('bec_academic_year') || '2025-26';
+  if (st) st.value = localStorage.getItem('bec_semester_type') || 'ODD';
+};
+
+window.saveAcademicSettings = async () => {
+  const year = document.getElementById('academic-year').value.trim() || '2025-26';
+  const type = document.getElementById('semester-type').value;
+  localStorage.setItem('bec_academic_year', year);
+  localStorage.setItem('bec_semester_type', type);
+  try {
+    await setDoc(doc(db, 'colleges', 'bec_bagalkote_001'), {
+      name: 'Basaveshwar Engineering College Bagalkote',
+      code: '2BA',
+      branches: DEFAULT_BRANCHES,
+      divisions: DEFAULT_DIVISIONS,
+      semesters: DEFAULT_SEMS,
+      studentsPerDiv: 60,
+      academicYear: year,
+      semesterType: type,
+      projectId: 'bec-bagalkote-rutu',
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    showToast('✅ Settings saved!', 'success');
+  } catch (err) { showToast('Save failed: ' + err.message, 'error'); }
+};
+
+/* ============================================================
+   17. SUBJECT MODAL (Add / Edit)
+   ============================================================ */
+window.openAddSubjectModal = () => {
+  document.getElementById('subject-modal-title').textContent = 'Add Subject';
+  document.getElementById('subject-form-id').value = '';
+  document.getElementById('subject-name').value = '';
+  document.getElementById('subject-code').value = '';
+  document.getElementById('subject-strength').value = '60';
+  populateAcademicDropdowns();
+  document.getElementById('subject-modal').classList.remove('hidden');
+};
+
+window.openEditSubjectModal = (id) => {
+  const s = subjects.find(x => x.id === id);
+  if (!s) { showToast('Subject not found', 'error'); return; }
+  document.getElementById('subject-modal-title').textContent = 'Edit Subject';
+  document.getElementById('subject-form-id').value = s.id;
+  document.getElementById('subject-name').value = s.name;
+  document.getElementById('subject-code').value = s.code;
+  document.getElementById('subject-strength').value = s.strength || 60;
+  populateAcademicDropdowns();
+
+  const semSel = document.getElementById('subject-semester');
+  const divSel = document.getElementById('subject-division');
+  const brSel  = document.getElementById('subject-branch');
+
+  if (s.semester && !DEFAULT_SEMS.includes(s.semester))
+    semSel.innerHTML += `<option value="${s.semester}">${s.semester}</option>`;
+  if (s.division && !DEFAULT_DIVISIONS.includes(s.division))
+    divSel.innerHTML += `<option value="${s.division}">${s.division}</option>`;
+  if (s.branch && !DEFAULT_BRANCHES.includes(s.branch))
+    brSel.innerHTML += `<option value="${s.branch}">${s.branch}</option>`;
+
+  semSel.value = s.semester || DEFAULT_SEMS[0];
+  divSel.value = s.division || DEFAULT_DIVISIONS[0];
+  brSel.value  = s.branch   || DEFAULT_BRANCHES[0];
+
+  document.getElementById('subject-modal').classList.remove('hidden');
+};
+
+window.closeSubjectModal = () => document.getElementById('subject-modal').classList.add('hidden');
+
+window.handleSubjectSubmit = async (e) => {
+  e.preventDefault();
+
+  const id       = document.getElementById('subject-form-id').value || Date.now().toString();
+  const name     = document.getElementById('subject-name').value.trim();
+  const code     = document.getElementById('subject-code').value.trim();
+  const semester = document.getElementById('subject-semester').value;
+  const division = document.getElementById('subject-division').value;
+  const branch   = document.getElementById('subject-branch').value;
+  const strength = parseInt(document.getElementById('subject-strength').value) || 60;
+
+  if (!name || !code) { showToast('Name and Code are required', 'error'); return; }
+  if (strength < 1)   { showToast('Strength must be at least 1', 'error'); return; }
+
+  const duplicate = subjects.some(s =>
+    s.id !== id &&
+    s.code.toLowerCase() === code.toLowerCase() &&
+    s.branch === branch &&
+    s.semester === semester &&
+    s.division === division
+  );
+  if (duplicate) {
+    showToast(`Subject code "${code}" already exists for this branch / sem / division.`, 'error');
+    return;
+  }
+
+  const existing = subjects.find(s => s.id === id);
+  const subj = {
+    id, name, code, semester, division, branch, strength,
+    timetable: existing?.timetable || [],
+    notes:     existing?.notes     || [],
+    resources: existing?.resources || [],
+    syllabus:  existing?.syllabus  || null,
+    collegeId: 'bec_bagalkote_001'
+  };
+
+  try {
+    await saveSubjectToFirebase(subj);
+    closeSubjectModal();
+    showToast(`✅ Subject <b>${code}</b> saved!`, 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Save failed: ' + err.message, 'error');
+  }
+};
+
+window.deleteSubject = async (id) => {
+  const s = subjects.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm(`Delete "${s.code} - ${s.name}"?\nAll attendance for this subject will also be deleted.`)) return;
+  try {
+    await deleteSubjectFromFirebase(id);
+    for (const k in attendanceData) {
+      if (attendanceData[k].subjectId === id) {
+        await deleteDoc(doc(db, 'attendance', k));
+        delete attendanceData[k];
+      }
+    }
+    if (currentSubjectId === id) { currentSubjectId = null; switchView(previousView || 'my-subjects'); }
+    showToast('Subject deleted', 'info');
+  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
+};
+
+/* ============================================================
+   18. VIEW ROUTING & SIDEBAR
+   ============================================================ */
+window.switchView = (view) => {
+  currentView = view;
+
+  document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+  const target = document.getElementById('view-' + view);
+  if (target) target.classList.remove('hidden');
+
+  document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+  const linkView = (view === 'subject-detail') ? 'my-subjects' : view;
+  const link = document.querySelector(`.sidebar-link[data-view="${linkView}"]`);
+  if (link) link.classList.add('active');
+
+  const titles = {
+    dashboard: 'Dashboard',
+    'my-subjects': 'My Subjects',
+    'subject-detail': 'Subject Details',
+    attendance: 'Attendance',
+    student: 'Student Portal',
+    teacher: 'Faculty Portal',
+    'admin-users': 'User Management',
+    'admin-settings': 'Settings'
+  };
+  const pt = document.getElementById('page-title');
+  if (pt) pt.textContent = titles[view] || view;
+
+  if      (view === 'dashboard')      renderDashboard();
+  else if (view === 'my-subjects')    renderMySubjects();
+  else if (view === 'subject-detail') renderSubjectDetail();
+  else if (view === 'attendance')     renderAttendanceView();
+  else if (view === 'student')        renderStudentWebsite();
+  else if (view === 'teacher')        renderTeacherWebsite();
+  else if (view === 'admin-users')    renderAdminUsers();
+  else if (view === 'admin-settings') renderAdminSettings();
+
+  if (window.innerWidth <= 768) toggleSidebar(false);
+};
+
+window.toggleSidebar = (force) => {
+  const sb = document.querySelector('.sidebar-fixed');
+  const bd = document.getElementById('sidebar-backdrop');
+  if (!sb || !bd) return;
+  const isOpen = sb.classList.contains('open');
+  const newState = force !== undefined ? force : !isOpen;
+  if (newState) {
+    sb.classList.add('open');
+    bd.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  } else {
+    sb.classList.remove('open');
+    bd.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+};
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    const sb = document.querySelector('.sidebar-fixed');
+    const bd = document.getElementById('sidebar-backdrop');
+    if (sb && bd) { sb.classList.remove('open'); bd.classList.remove('open'); }
+    document.body.style.overflow = '';
+  }
+});
+
+/* ============================================================
+   19. INIT APP
+   ============================================================ */
+async function initApp() {
+  const user = getCurrentUser();
+  if (!user) {
+    document.getElementById('auth-container').classList.remove('hidden');
+    document.getElementById('app-wrapper').classList.remove('show');
+    return;
+  }
+
+  document.getElementById('auth-container').classList.add('hidden');
+  document.getElementById('app-wrapper').classList.add('show');
+
+  const initial = (user.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  document.getElementById('sidebar-avatar').textContent = initial;
+  document.getElementById('sidebar-name').textContent   = user.name || 'User';
+  document.getElementById('sidebar-role').textContent   =
+    user.role === 'admin' ? 'Administrator' :
+    user.role === 'teacher' ? 'Faculty Guide' : 'Student';
+
+  /* Only show academic line if the user actually has values (teachers may have none) */
+  const parts = [];
+  if (user.semester) parts.push(user.semester);
+  if (user.division) parts.push('Div ' + user.division);
+  if (user.branch)   parts.push(user.branch);
+  document.getElementById('sidebar-academic').textContent = parts.join(' · ');
+
+  document.getElementById('header-user').textContent   = user.name || 'User';
+  document.getElementById('header-avatar').textContent = initial;
+
+  const nav = document.getElementById('sidebar-nav');
+  let links = '';
+
+  if (user.role === 'admin') {
+    links = `
+      <a class="sidebar-link active" data-view="dashboard" href="#" onclick="switchView('dashboard');return false;"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+      <a class="sidebar-link" data-view="my-subjects" href="#" onclick="switchView('my-subjects');return false;"><span class="material-symbols-outlined">auto_stories</span>My Subjects</a>
+      <a class="sidebar-link" data-view="attendance" href="#" onclick="switchView('attendance');return false;"><span class="material-symbols-outlined">fact_check</span>Attendance</a>
+      <a class="sidebar-link" data-view="student" href="#" onclick="switchView('student');return false;"><span class="material-symbols-outlined">visibility</span>Student View</a>
+      <a class="sidebar-link" data-view="teacher" href="#" onclick="switchView('teacher');return false;"><span class="material-symbols-outlined">school</span>Teacher View</a>
+      <a class="sidebar-link" data-view="admin-users" href="#" onclick="switchView('admin-users');return false;"><span class="material-symbols-outlined">people</span>Users</a>
+      <a class="sidebar-link" data-view="admin-settings" href="#" onclick="switchView('admin-settings');return false;"><span class="material-symbols-outlined">settings</span>Settings</a>`;
+  } else if (user.role === 'teacher') {
+    links = `
+      <a class="sidebar-link active" data-view="teacher" href="#" onclick="switchView('teacher');return false;"><span class="material-symbols-outlined">home</span>Home</a>
+      <a class="sidebar-link" data-view="my-subjects" href="#" onclick="switchView('my-subjects');return false;"><span class="material-symbols-outlined">auto_stories</span>My Subjects</a>
+      <a class="sidebar-link" data-view="attendance" href="#" onclick="switchView('attendance');return false;"><span class="material-symbols-outlined">fact_check</span>Attendance</a>`;
+  } else {
+    links = `
+      <a class="sidebar-link active" data-view="student" href="#" onclick="switchView('student');return false;"><span class="material-symbols-outlined">home</span>Student Home</a>`;
+  }
+  nav.innerHTML = links;
+
+  populateAcademicDropdowns();
+  await loadAttendanceDataFirebase();
+  loadSubjectsLive();
+
+  if      (user.role === 'student') switchView('student');
+  else if (user.role === 'teacher') switchView('teacher');
+  else                              switchView('dashboard');
+}
+
+/* ============================================================
+   20. BOOT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async () => {
+  populateAcademicDropdowns();
+
+  /* Default role is teacher → show optional hints */
+  const hints = ['sem-hint','div-hint','br-hint'];
+  hints.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'inline';
+  });
+
+  await loadAttendanceDataFirebase();
+
+  const session = getSession();
+  if (session) {
+    initApp();
+  } else {
+    document.getElementById('auth-container').classList.remove('hidden');
+    document.getElementById('app-wrapper').classList.remove('show');
+    showLogin();
+  }
+});
+
+/* ============================================================
+   21. EXPOSE HANDLERS TO GLOBAL SCOPE
+   ============================================================ */
+Object.assign(window, {
+  handleLogin, handleSignup, showLogin, showSignup, selectRole,
+  getSession, getCurrentUser, logout,
+  switchView, toggleSidebar, renderAll,
+  openAddSubjectModal, openEditSubjectModal, closeSubjectModal, handleSubjectSubmit, deleteSubject,
+  openSubjectDetail, goBackFromSubjectDetail, openEditCurrentSubject,
+  switchSubjectTab, renderSubjectDetail,
+  openTimetableModal, closeTimetableModal, handleTimetableSubmit, deleteTimetableSlot,
+  openNoteModal, closeNoteModal, handleNoteSubmit, deleteNote,
+  openSyllabusModal, closeSyllabusModal, handleSyllabusSubmit,
+  openResourceModal, closeResourceModal, handleResourceSubmit, deleteResource,
+  renderAttendanceView, loadAttendance, toggleRoll,
+  markAllPresent, markAllAbsent, updateSelectedInfo, submitAttendance,
+  toggleAttendanceHistory, renderHistory,
+  renderStudentWebsite, switchStudentTab, showSubjectDetailStudent,
+  renderTeacherWebsite, switchTeacherTab,
+  loadTeacherAttendance, toggleTeacherRoll,
+  markTeacherAllPresent, markTeacherAllAbsent, submitTeacherAttendance,
+  toggleTeacherHistory,
+  renderAdminUsers, deleteUser, renderAdminSettings, saveAcademicSettings,
+  populateAcademicDropdowns, getStudentSubjects, patchSubject
+});
+
+console.log('%c🔥 BEC Bagalkote · LIVE Firebase bec-bagalkote-rutu ready', 'color:#0B7B4D;font-weight:700');
+</script>
+</body>
+</html>
