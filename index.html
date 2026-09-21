@@ -1,735 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-<title>BEC Bagalkote · LIVE Firebase Backend</title>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  darkMode: "class",
-  theme: {
-    extend: {
-      colors: {
-        navy: "#0A1628", primary: "#7F1D1D", primaryLight: "#991B1B",
-        accent: "#D4A745", surface: "#FFFFFF", bg: "#F8F2F0",
-        muted: "#F0E8E6", hairl: "#E8DCD8", subtext: "#6B5A55",
-        body: "#1E1A18", display: "#1A0E0C"
-      },
-      fontFamily: { sans: ["Inter","sans-serif"], display: ["Space Grotesk","sans-serif"] }
-    }
-  }
-}
-</script>
-<style>
-/* ── base ── */
-*{box-sizing:border-box}
-body{font-family:"Inter",sans-serif;background:#F8F2F0;color:#1E1A18;margin:0;padding:0;-webkit-font-smoothing:antialiased}
-.font-display{font-family:"Space Grotesk",sans-serif}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:#F8F2F0}
-::-webkit-scrollbar-thumb{background:#D4C5C0;border-radius:8px}
-::-webkit-scrollbar-thumb:hover{background:#B8A5A0}
-
-/* ── sidebar ── */
-.sidebar-fixed{background:#0A1628!important;border-right:none!important}
-.sidebar-link{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-radius:.5rem;color:#94A3B8;font-size:.8125rem;font-weight:500;transition:all .2s;cursor:pointer;text-decoration:none;border-left:3px solid transparent}
-.sidebar-link:hover{background:rgba(255,255,255,.06);color:#F1F5F9}
-.sidebar-link.active{background:rgba(220,38,38,.15);color:#F87171;border-left-color:#DC2626}
-.sidebar-link .material-symbols-outlined{font-size:20px}
-
-/* ── cards ── */
-.card{background:#fff;border:1px solid #E8DCD8;border-radius:.75rem;box-shadow:0 1px 3px rgba(26,14,12,.04);transition:box-shadow .2s}
-.card:hover{box-shadow:0 8px 24px rgba(26,14,12,.06)}
-.card-stat{border:none;background:#fff;border-radius:.75rem;box-shadow:0 1px 3px rgba(26,14,12,.04);padding:1.25rem 1.5rem;transition:all .2s}
-.card-stat:hover{box-shadow:0 8px 24px rgba(26,14,12,.08);transform:translateY(-2px)}
-.academic-info-bar{background:linear-gradient(135deg,#0A1628 0%,#1a0e2e 100%);border-radius:.75rem;padding:1rem 1.5rem;color:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem 1.5rem;border:1px solid rgba(255,255,255,.08)}
-.hero-teacher{background:linear-gradient(135deg,#7F1D1D 0%,#991B1B 100%);border-radius:1rem;padding:2rem;color:#fff;position:relative;overflow:hidden}
-.hero-teacher::after{content:'👨‍🏫';position:absolute;right:1.5rem;bottom:1rem;font-size:5rem;opacity:.12}
-.hero-title{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:1.6rem;margin-bottom:.25rem}
-.hero-sub{font-size:.9rem;opacity:.8}
-.hero-meta{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;margin-top:.75rem;font-size:.8rem;opacity:.7}
-.hero-meta span{display:flex;align-items:center;gap:.25rem}
-
-/* ── buttons ── */
-.btn-primary{background:#7F1D1D;color:#fff;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;transition:all .2s;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}
-.btn-primary:hover{background:#5C1515;box-shadow:0 4px 12px rgba(127,29,29,.3)}
-.btn-secondary{background:#DC2626;color:#fff;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;transition:all .2s;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}
-.btn-secondary:hover{background:#B91C1C;box-shadow:0 4px 12px rgba(220,38,38,.3)}
-.btn-ghost{background:#F1EDEB;color:#1E1A18;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;transition:all .2s;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}
-.btn-ghost:hover{background:#E8DCD8}
-.btn-danger{background:#DC2626;color:#fff;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;transition:all .2s;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}
-.btn-danger:hover{background:#B91C1C;box-shadow:0 4px 12px rgba(220,38,38,.3)}
-.btn-success{background:#0B7B4D;color:#fff;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;transition:all .2s;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}
-.btn-success:hover{background:#065F3A;box-shadow:0 4px 12px rgba(11,123,77,.3)}
-
-/* ── tabs ── */
-.tab-btn{padding:.6rem 1.2rem;border-radius:.5rem;font-size:.8125rem;font-weight:600;color:#6B5A55;background:transparent;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.375rem;white-space:nowrap}
-.tab-btn.active{background:#7F1D1D;color:#fff}
-.tab-btn:hover:not(.active){background:#F1EDEB;color:#7F1D1D}
-.tab-btn .material-symbols-outlined{font-size:18px}
-.role-tab-bar{background:#fff;border-radius:.75rem;padding:.5rem .75rem;border:1px solid #E8DCD8;display:flex;gap:.25rem;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.role-tab-bar .tab-btn{flex-shrink:0;font-size:.8rem;padding:.5rem 1rem;border-radius:.5rem;font-weight:600;color:#6B5A55;background:transparent;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.375rem}
-.role-tab-bar .tab-btn.active{background:#7F1D1D;color:#fff}
-.role-tab-bar .tab-btn:hover:not(.active){background:#F1EDEB}
-
-/* ── modal ── */
-.modal-overlay{background:rgba(10,22,40,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.modal-content{background:#fff;border-radius:1rem;box-shadow:0 24px 64px rgba(10,22,40,.2);max-width:560px;width:100%;max-height:92vh;overflow-y:auto;animation:modalIn .25s ease}
-@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.modal-content .modal-header{border-bottom:1px solid #F0E8E6;padding:1.25rem 1.5rem}
-.modal-content .modal-body{padding:1.5rem}
-.modal-content .modal-footer{border-top:1px solid #F0E8E6;padding:1rem 1.5rem;display:flex;justify-content:flex-end;gap:.75rem;flex-wrap:wrap}
-
-/* ── forms ── */
-.form-input,.form-select,.form-textarea{width:100%;padding:.65rem .9rem;border:1.5px solid #E8DCD8;border-radius:.5rem;font-size:.875rem;background:#FDFBFA;transition:border .15s,box-shadow .15s;font-family:"Inter",sans-serif;color:#1E1A18}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#DC2626;box-shadow:0 0 0 3px rgba(220,38,38,.1);outline:none}
-.form-label{display:block;font-size:.75rem;font-weight:600;color:#6B5A55;margin-bottom:.25rem;letter-spacing:.02em;text-transform:uppercase}
-
-/* ── toast ── */
-.toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:10px;color:#fff;font-weight:600;font-size:14px;z-index:9999;opacity:0;transform:translateY(20px) scale(.96);transition:all .35s cubic-bezier(.22,1,.36,1);pointer-events:none;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.15);background:#7F1D1D;line-height:1.5}
-.toast.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
-.toast.success{background:#0B7B4D}
-.toast.error{background:#B91C1C}
-.toast.info{background:#7F1D1D}
-
-/* ── auth ── */
-.auth-container{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A1628 0%,#7F1D1D 100%);padding:20px}
-.auth-card{background:rgba(255,255,255,.98);backdrop-filter:blur(20px);border-radius:20px;box-shadow:0 32px 80px rgba(0,0,0,.3);padding:44px 40px;width:100%;max-width:480px;border:1px solid rgba(255,255,255,.1)}
-.role-selector{display:flex;gap:8px;margin-top:2px}
-.role-selector button{flex:1;padding:10px 12px;border:2px solid #E8DCD8;border-radius:10px;background:#fff;font-weight:600;font-size:13px;cursor:pointer;color:#6B5A55;display:flex;align-items:center;justify-content:center;gap:6px;font-family:"Inter",sans-serif;transition:all .15s}
-.role-selector button.active{border-color:#DC2626;background:#FEF2F2;color:#DC2626}
-.role-selector button.active::after{content:" ✓";font-weight:700}
-
-/* ── attendance ── */
-.attendance-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;max-width:700px;margin:12px 0}
-@media(max-width:640px){.attendance-grid{grid-template-columns:repeat(5,1fr);gap:6px}}
-@media(max-width:400px){.attendance-grid{grid-template-columns:repeat(4,1fr);gap:4px}}
-.roll-btn{padding:10px 4px;border:2px solid #E8DCD8;background:#fff;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;transition:all .15s;text-align:center;color:#1A0E0C;touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent;font-family:"Inter",sans-serif}
-.roll-btn:hover{border-color:#B8A5A0;transform:scale(1.04)}
-.roll-btn.absent{background:#FEE2E2;border-color:#FCA5A5;color:#991B1B}
-.roll-btn.present{background:#D1FAE5;border-color:#6EE7B7;color:#065F3A}
-.attendance-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0;padding:16px 20px;background:#FDFBFA;border-radius:10px;border:1px solid #E8DCD8}
-@media(max-width:480px){.attendance-controls{flex-direction:column;align-items:stretch}.attendance-controls button{width:100%;justify-content:center}}
-.selected-info{padding:8px 16px;background:#fff;border-radius:8px;border:1px solid #E8DCD8;font-size:13px;color:#6B5A55;flex:1;min-width:180px}
-.selected-info strong{color:#1A0E0C}
-.history-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#FDFBFA;border-radius:8px;margin-bottom:6px;border-left:4px solid #DC2626;gap:8px;flex-wrap:wrap}
-.history-item .date{font-weight:600;color:#1A0E0C}
-.badge-status{font-size:10px;font-weight:600;padding:2px 10px;border-radius:12px}
-.badge-status.present{background:#D1FAE5;color:#065F3A}
-.badge-status.absent{background:#FEE2E2;color:#991B1B}
-
-/* ── subject cards ── */
-.subject-card{background:#fff;border:1px solid #E8DCD8;border-radius:.75rem;padding:1.25rem;transition:all .25s;cursor:pointer}
-.subject-card:hover{box-shadow:0 8px 32px rgba(26,14,12,.08);transform:translateY(-3px);border-color:#D4C5C0}
-.code-badge{font-family:'Courier New',monospace;font-weight:700;color:#DC2626;font-size:14px;background:#FEF2F2;padding:2px 12px;border-radius:6px;display:inline-block}
-.meta-tag{font-size:11px;font-weight:500;color:#6B5A55;background:#F1EDEB;padding:2px 10px;border-radius:12px;display:inline-block}
-
-/* ── tables ── */
-.data-table{width:100%;border-collapse:collapse;font-size:13px}
-.data-table th{background:#FDFBFA;color:#6B5A55;font-weight:600;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #E8DCD8}
-.data-table td{padding:10px 14px;border-bottom:1px solid #F0E8E6;word-break:break-word}
-.data-table tr:last-child td{border-bottom:none}
-.data-table tr:hover td{background:#FDFBFA}
-
-/* ── badges ── */
-.resource-type-badge{font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 10px;border-radius:12px;background:#FEF2F2;color:#DC2626;letter-spacing:.03em}
-.link-type-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:12px;background:#F1EDEB;color:#6B5A55}
-.debug-badge{font-size:9px;font-weight:600;color:#64748B;background:#F1F5F9;padding:1px 8px;border-radius:10px;font-family:'Courier New',monospace;letter-spacing:.02em}
-
-/* ── stats ── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem}
-.stat-item{background:#fff;border-radius:.75rem;padding:1.25rem 1.5rem;border:1px solid #E8DCD8;transition:all .2s}
-.stat-item:hover{box-shadow:0 8px 24px rgba(26,14,12,.06);transform:translateY(-2px)}
-.stat-item .num{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:2rem;color:#1A0E0C}
-.stat-item .label{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:#6B5A55;font-weight:600}
-
-/* ── view animation ── */
-.view-section{animation:fadeSlide .3s ease}
-@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.hidden{display:none!important}
-.app-wrapper{display:none}
-.app-wrapper.show{display:block}
-
-/* ── sidebar backdrop / hamburger ── */
-.sidebar-backdrop{display:none;position:fixed;inset:0;z-index:40;background:rgba(10,22,40,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;transition:opacity .3s}
-.sidebar-backdrop.open{display:block;opacity:1}
-.hamburger-btn{display:none;background:transparent;border:none;padding:4px 8px;cursor:pointer;color:#1A0E0C;font-size:24px;line-height:1;-webkit-tap-highlight-color:transparent}
-.show-mobile{display:none!important}
-
-/* ── firebase status pill ── */
-.firebase-status{position:fixed;top:12px;right:12px;z-index:9999;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em;box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.firebase-status.connected{background:#D1FAE5;color:#065F3A;border:1px solid #6EE7B7}
-.firebase-status.connecting{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D}
-.firebase-status.offline{background:#FEE2E2;color:#991B1B}
-
-/* ── responsive ── */
-@media(max-width:768px){
-  .sidebar-fixed{position:fixed!important;left:0!important;top:0!important;width:280px!important;max-width:85vw!important;height:100vh!important;z-index:50!important;transform:translateX(-100%)!important;transition:transform .35s cubic-bezier(.22,1,.36,1)!important;box-shadow:4px 0 40px rgba(0,0,0,.12)!important;overflow-y:auto!important}
-  .sidebar-fixed.open{transform:translateX(0)!important}
-  .main-content{padding-left:0!important;width:100%}
-  .hamburger-btn{display:flex!important;align-items:center;justify-content:center}
-  .show-mobile{display:flex!important}
-  .hide-mobile{display:none!important}
-  header.app-header{padding-left:12px!important;padding-right:12px!important;gap:6px!important;flex-wrap:nowrap!important}
-  main.app-main{padding:12px!important}
-  .modal-content{max-width:100%!important;margin:12px!important;border-radius:12px!important}
-  .modal-content .modal-body{padding:1rem!important}
-  .modal-content .modal-header,.modal-content .modal-footer{padding:1rem!important}
-  .toast{bottom:12px!important;right:12px!important;left:12px!important;max-width:none!important;font-size:13px!important}
-  .hero-teacher{padding:1.25rem 1rem}
-  .hero-title{font-size:1.2rem}
-  .hero-teacher::after{font-size:3rem;right:.75rem;bottom:.75rem}
-  .stat-item .num{font-size:1.5rem}
-  .attendance-grid{gap:4px!important}
-  .roll-btn{font-size:11px!important;padding:8px 2px!important}
-  .data-table{font-size:11px!important}
-  .data-table td,.data-table th{padding:6px 8px!important}
-  #subject-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch;padding:4px 2px!important}
-  #subject-tabs .tab-btn{flex-shrink:0!important;font-size:11px!important;padding:6px 10px!important}
-  #subject-tabs .tab-btn .material-symbols-outlined{font-size:14px!important}
-  .role-tab-bar .tab-btn{font-size:.72rem!important;padding:.42rem .75rem!important}
-  #dash-stats{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}
-  .auth-card{padding:28px 20px!important}
-  .auth-card .role-selector{flex-direction:column}
-}
-@media(max-width:400px){
-  main.app-main{padding:8px!important}
-  #dash-stats{grid-template-columns:1fr 1fr!important;gap:6px!important}
-  .card-stat{padding:12px!important}
-  .card-stat .text-3xl{font-size:1.3rem!important}
-  .btn-primary,.btn-secondary,.btn-ghost,.btn-danger,.btn-success{font-size:11px!important;padding:6px 12px!important}
-  .auth-card{padding:20px 14px!important}
-}
-</style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>BEC Bagalkote · LIVE Firebase Backend</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={darkMode:"class",theme:{extend:{colors:{navy:"#0A1628",primary:"#7F1D1D",primaryLight:"#991B1B",accent:"#D4A745",surface:"#FFFFFF",bg:"#F8F2F0",muted:"#F0E8E6",hairl:"#E8DCD8",subtext:"#6B5A55",body:"#1E1A18",display:"#1A0E0C"},fontFamily:{sans:["Inter","sans-serif"],display:["Space Grotesk","sans-serif"]}}}}</script>
+    <style>
+*{box-sizing:border-box}body{font-family:"Inter",sans-serif;background:#F8F2F0;color:#1E1A18;margin:0;padding:0;-webkit-font-smoothing:antialiased}.font-display{font-family:"Space Grotesk",sans-serif}
+.sidebar-fixed{background:#0A1628!important;border-right:none!important}.sidebar-link{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-radius:.5rem;color:#94A3B8;font-size:.8125rem;font-weight:500;transition:all .2s;cursor:pointer;text-decoration:none;border-left:3px solid transparent}.sidebar-link:hover{background:rgba(255,255,255,.06);color:#F1F5F9}.sidebar-link.active{background:rgba(220,38,38,.15);color:#F87171;border-left-color:#DC2626}
+.card{background:#fff;border:1px solid #E8DCD8;border-radius:.75rem;box-shadow:0 1px 3px rgba(26,14,12,.04)}.card-stat{border:none;background:#fff;border-radius:.75rem;box-shadow:0 1px 3px rgba(26,14,12,.04);padding:1.25rem 1.5rem}.academic-info-bar{background:linear-gradient(135deg,#0A1628 0%,#1a0e2e 100%);border-radius:.75rem;padding:1rem 1.5rem;color:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem 1.5rem;border:1px solid rgba(255,255,255,.08)}
+.btn-primary{background:#7F1D1D;color:#fff;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}.btn-secondary{background:#DC2626;color:#fff;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}.btn-ghost{background:#F1EDEB;color:#1E1A18;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}.btn-danger{background:#DC2626;color:#fff;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}.btn-success{background:#0B7B4D;color:#fff;border-radius:.5rem;padding:.6rem 1.25rem;font-weight:600;font-size:.8125rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem}
+.tab-btn{padding:.6rem 1.2rem;border-radius:.5rem;font-size:.8125rem;font-weight:600;color:#6B5A55;background:transparent;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.375rem;white-space:nowrap}.tab-btn.active{background:#7F1D1D;color:#fff}
+.modal-overlay{background:rgba(10,22,40,.5);backdrop-filter:blur(6px)}.modal-content{background:#fff;border-radius:1rem;box-shadow:0 24px 64px rgba(10,22,40,.2);max-width:560px;width:100%;max-height:92vh;overflow-y:auto;animation:modalIn .25s ease}@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}.form-input,.form-select,.form-textarea{width:100%;padding:.65rem .9rem;border:1.5px solid #E8DCD8;border-radius:.5rem;font-size:.875rem;background:#FDFBFA;font-family:"Inter",sans-serif;color:#1E1A18}.form-label{display:block;font-size:.75rem;font-weight:600;color:#6B5A55;margin-bottom:.25rem;text-transform:uppercase}
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:10px;color:#fff;font-weight:600;font-size:14px;z-index:9999;opacity:0;transform:translateY(20px) scale(.96);transition:all .35s cubic-bezier(.22,1,.36,1);pointer-events:none;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.15);background:#7F1D1D}.toast.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}.toast.success{background:#0B7B4D}.toast.error{background:#B91C1C}
+.auth-container{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0A1628 0%,#7F1D1D 100%);padding:20px}.auth-card{background:rgba(255,255,255,.98);backdrop-filter:blur(20px);border-radius:20px;box-shadow:0 32px 80px rgba(0,0,0,.3);padding:44px 40px;width:100%;max-width:480px;border:1px solid rgba(255,255,255,.1)}
+.role-selector{display:flex;gap:8px;margin-top:2px}.role-selector button{flex:1;padding:10px 12px;border:2px solid #E8DCD8;border-radius:10px;background:#fff;font-weight:600;font-size:13px;cursor:pointer;color:#6B5A55;display:flex;align-items:center;justify-content:center;gap:6px}.role-selector button.active{border-color:#DC2626;background:#FEF2F2;color:#DC2626}
+.attendance-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;max-width:700px;margin:12px 0}@media(max-width:640px){.attendance-grid{grid-template-columns:repeat(5,1fr)}}.roll-btn{padding:10px 4px;border:2px solid #E8DCD8;background:#fff;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;transition:all .15s;text-align:center;color:#1A0E0C}.roll-btn.absent{background:#FEE2E2;border-color:#FCA5A5;color:#991B1B}.roll-btn.present{background:#D1FAE5;border-color:#6EE7B7;color:#065F3A}
+.subject-card{background:#fff;border:1px solid #E8DCD8;border-radius:.75rem;padding:1.25rem;transition:all .25s;cursor:pointer}.subject-card:hover{box-shadow:0 8px 32px rgba(26,14,12,.08);transform:translateY(-3px)}.code-badge{font-family:'Courier New',monospace;font-weight:700;color:#DC2626;font-size:14px;background:#FEF2F2;padding:2px 12px;border-radius:6px}.meta-tag{font-size:11px;font-weight:500;color:#6B5A55;background:#F1EDEB;padding:2px 10px;border-radius:12px}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}.data-table th{background:#FDFBFA;color:#6B5A55;font-weight:600;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:1px solid #E8DCD8}.data-table td{padding:10px 14px;border-bottom:1px solid #F0E8E6}
+.view-section{animation:fadeSlide .3s ease}@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.hidden{display:none!important}.app-wrapper{display:none}.app-wrapper.show{display:block}
+.sidebar-backdrop{display:none;position:fixed;inset:0;z-index:40;background:rgba(10,22,40,.4);backdrop-filter:blur(4px);opacity:0}.sidebar-backdrop.open{display:block;opacity:1}.hamburger-btn{display:none;background:transparent;border:none;padding:4px 8px;cursor:pointer;color:#1A0E0C;font-size:24px}
+@media(max-width:768px){.sidebar-fixed{position:fixed!important;left:0!important;top:0!important;width:280px!important;max-width:85vw!important;height:100vh!important;z-index:50!important;transform:translateX(-100%)!important;transition:transform .35s cubic-bezier(.22,1,.36,1)!important;overflow-y:auto!important}.sidebar-fixed.open{transform:translateX(0)!important}.main-content{padding-left:0!important}.hamburger-btn{display:flex!important}header.app-header{padding-left:12px!important;padding-right:12px!important}.show-mobile{display:flex!important}}
+.firebase-status{position:fixed;top:12px;right:12px;z-index:9999;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.04em}.firebase-status.connected{background:#D1FAE5;color:#065F3A;border:1px solid #6EE7B7}.firebase-status.connecting{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D}.firebase-status.offline{background:#FEE2E2;color:#991B1B}
+    </style>
 </head>
 <body>
-
-<!-- ================= FIREBASE STATUS ================= -->
 <div id="firebase-status" class="firebase-status connecting">🟡 CONNECTING bec-bagalkote-rutu...</div>
-
-<!-- ================= TOAST ================= -->
 <div id="toast" class="toast"></div>
-
-<!-- ============================================================ -->
-<!-- AUTH CONTAINER                                                -->
-<!-- ============================================================ -->
 <div id="auth-container" class="auth-container">
-  <div class="auth-card">
-    <div class="flex items-center gap-3 mb-2">
-      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#7F1D1D] to-[#DC2626] flex items-center justify-center text-white font-bold text-[20px] flex-shrink-0">B</div>
-      <div>
-        <div class="font-display font-bold text-[18px]">BEC Bagalkote</div>
-        <div class="text-[12px] text-[#6B5A55]">🔥 LIVE Firebase • bec-bagalkote-rutu</div>
-      </div>
-    </div>
-
-    <div class="bg-[#D1FAE5] border border-[#6EE7B7] rounded-lg p-3 mb-4 text-[11px] text-[#065F3A]">
-      <b>✅ LIVE CONFIG LOADED:</b> bec-bagalkote-rutu • Project ID: bec-bagalkote-rutu<br>
-      Admin: <b>mmbbec@gmail.com</b> • 60 Students • A–O Divisions
-    </div>
-
-    <!-- LOGIN -->
-    <div id="login-form">
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input id="login-email" type="email" class="form-input" placeholder="mmbbec@gmail.com" value="mmbbec@gmail.com" />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input id="login-password" type="password" class="form-input" placeholder="••••••••" value="admin123" />
-      </div>
-      <button class="btn-primary" style="width:100%;justify-content:center" onclick="handleLogin()">🔥 Sign In LIVE Firebase</button>
-      <div class="text-center text-[13px] mt-3 text-[#6B5A55]">
-        Don't have account? <a onclick="showSignup()" class="text-[#DC2626] font-semibold cursor-pointer">Create one</a>
-      </div>
-      <div class="mt-3 text-[11px] text-[#065F3A] bg-[#D1FAE5] p-2 rounded border border-[#6EE7B7]">
-        🔥 LIVE MODE: <b>mmbbec@gmail.com / admin123</b><br>
-        Teacher: any email / 1234 &nbsp;•&nbsp; Student: CSE 5A, 60 strength
-      </div>
-    </div>
-
-    <!-- SIGNUP -->
-    <div id="signup-form" class="hidden">
-      <div class="mb-2"><label class="form-label">Full Name</label><input id="signup-name" type="text" class="form-input" placeholder="Your name" /></div>
-      <div class="mb-2"><label class="form-label">Email</label><input id="signup-email" type="email" class="form-input" placeholder="you@example.com" /></div>
-      <div class="mb-2"><label class="form-label">Password</label><input id="signup-password" type="password" class="form-input" value="1234" /></div>
-      <div class="mb-2">
-        <label class="form-label">I am a...</label>
-        <div class="role-selector">
-          <button id="role-teacher" class="active" type="button" onclick="selectRole('teacher')">👨‍🏫 Teacher</button>
-          <button id="role-student" type="button" onclick="selectRole('student')">🎓 Student</button>
+    <div class="auth-card">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#7F1D1D] to-[#DC2626] flex items-center justify-center text-white font-bold text-[20px]">B</div>
+            <div><div class="font-display font-bold text-[18px]">BEC Bagalkote</div><div class="text-[12px] text-[#6B5A55]">🔥 LIVE Firebase • bec-bagalkote-rutu</div></div>
         </div>
-        <input type="hidden" id="signup-role" value="teacher" />
-      </div>
-      <div class="grid grid-cols-1 gap-2 mb-2">
-        <div><label class="form-label">Semester</label><select id="signup-semester" class="form-select"></select></div>
-        <div><label class="form-label">Division A–O</label><select id="signup-division" class="form-select"></select></div>
-        <div id="branch-group"><label class="form-label">Branch Name</label><select id="signup-branch" class="form-select"></select></div>
-      </div>
-      <button class="btn-success" style="width:100%;justify-content:center" onclick="handleSignup()">Create Account in LIVE Firebase</button>
-      <div class="text-center text-[13px] mt-3 text-[#6B5A55]">
-        Already have? <a onclick="showLogin()" class="text-[#DC2626] font-semibold cursor-pointer">Sign In</a>
-      </div>
+        <div class="bg-[#D1FAE5] border border-[#6EE7B7] rounded-lg p-3 mb-4 text-[11px] text-[#065F3A]">
+            <b>✅ LIVE CONFIG LOADED:</b> bec-bagalkote-rutu • Project ID: bec-bagalkote-rutu • Region asia-south1<br>Admin: <b>mmbbec@gmail.com</b> • 60 Students • A-O Divs
+        </div>
+        <div id="login-form">
+            <div class="mb-3"><label class="form-label">Email</label><input id="login-email" type="email" class="form-input" placeholder="mmbbec@gmail.com" value="mmbbec@gmail.com" /></div>
+            <div class="mb-3"><label class="form-label">Password</label><input id="login-password" type="password" class="form-input" placeholder="••••••••" value="admin123" /></div>
+            <button class="btn-primary w-full justify-center" onclick="handleLogin()" style="width:100%">🔥 Sign In LIVE Firebase</button>
+            <div class="text-center text-[13px] mt-3 text-[#6B5A55]">Don't have account? <a onclick="showSignup()" class="text-[#DC2626] font-semibold cursor-pointer">Create one</a></div>
+            <div class="mt-3 text-[11px] text-[#065F3A] bg-[#D1FAE5] p-2 rounded border border-[#6EE7B7]">🔥 LIVE MODE: mmbbec@gmail.com / admin123<br>Teacher: any email / 1234<br>Student: CSE 5A, 60 strength test<br>Project: bec-bagalkote-rutu</div>
+        </div>
+        <div id="signup-form" class="hidden">
+            <div class="mb-2"><label class="form-label">Full Name</label><input id="signup-name" type="text" class="form-input" placeholder="Your name" /></div>
+            <div class="mb-2"><label class="form-label">Email</label><input id="signup-email" type="email" class="form-input" placeholder="you@example.com" /></div>
+            <div class="mb-2"><label class="form-label">Password</label><input id="signup-password" type="password" class="form-input" value="1234" /></div>
+            <div class="mb-2"><label class="form-label">I am a...</label><div class="role-selector"><button id="role-teacher" class="active" type="button" onclick="selectRole('teacher')">👨🏫 Teacher</button><button id="role-student" type="button" onclick="selectRole('student')">🎓 Student</button></div><input type="hidden" id="signup-role" value="teacher" /></div>
+            <div class="grid grid-cols-1 gap-2 mb-2">
+                <div><label class="form-label">Semester</label><select id="signup-semester" class="form-select"></select></div>
+                <div><label class="form-label">Division A-O</label><select id="signup-division" class="form-select"></select></div>
+                <div id="branch-group"><label class="form-label">Branch Name</label><select id="signup-branch" class="form-select"></select></div>
+            </div>
+            <button class="btn-success w-full justify-center" onclick="handleSignup()" style="width:100%">Create Account in LIVE Firebase</button>
+            <div class="text-center text-[13px] mt-3 text-[#6B5A55]">Already have? <a onclick="showLogin()" class="text-[#DC2626] font-semibold cursor-pointer">Sign In</a></div>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- APP WRAPPER                                                   -->
-<!-- ============================================================ -->
 <div id="app-wrapper" class="app-wrapper">
-
-  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar-fixed fixed left-0 top-0 h-screen w-[260px] bg-white border-r border-[#E8DCD8] z-50 flex flex-col">
-    <div class="p-4 flex items-center gap-3 border-b border-white/10">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7F1D1D] to-[#DC2626] flex items-center justify-center text-white font-bold flex-shrink-0">B</div>
-      <div>
-        <div class="font-display font-bold text-[#F1F5F9] text-[14px]">BEC Bagalkote</div>
-        <div class="text-[11px] text-[#94A3B8]">🔥 LIVE • bec-bagalkote-rutu</div>
-      </div>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
+    <aside class="sidebar-fixed fixed left-0 top-0 h-screen w-[260px] bg-white border-r border-[#E8DCD8] z-50 flex flex-col">
+        <div class="p-4 flex items-center gap-3 border-b border-white/10">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7F1D1D] to-[#DC2626] flex items-center justify-center text-white font-bold">B</div>
+            <div><div class="font-display font-bold text-[#F1F5F9] text-[14px]">BEC Bagalkote</div><div class="text-[11px] text-[#94A3B8]">🔥 LIVE • bec-bagalkote-rutu</div></div>
+        </div>
+        <div class="px-4 py-3 border-b border-white/10">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#DC2626] to-[#7F1D1D] text-white flex items-center justify-center font-bold text-[14px]" id="sidebar-avatar">MB</div>
+                <div><div class="text-[13px] font-semibold text-[#F1F5F9]" id="sidebar-name">—</div><div class="text-[11px] text-[#94A3B8]" id="sidebar-role">—</div><div class="text-[10px] text-[#64748B]" id="sidebar-academic"></div></div>
+                <button onclick="logout()" class="ml-auto text-[#64748B] hover:text-red-400"><span class="material-symbols-outlined text-[20px]">logout</span></button>
+            </div>
+        </div>
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto" id="sidebar-nav"></nav>
+        <div class="p-3 text-center text-[10px] text-[#64748B] border-t border-white/10">🔥 LIVE Firebase • bec-bagalkote-rutu<br>60 Students • A-O Div • 2BA<br>Dr. Mahadev Biradar</div>
+    </aside>
+    <div class="main-content pl-[260px] min-h-screen">
+        <header class="app-header bg-white border-b border-[#E8DCD8] h-16 flex items-center justify-between px-6 sticky top-0 z-40">
+            <div class="flex items-center gap-3"><button class="hamburger-btn show-mobile" onclick="toggleSidebar()"><span class="material-symbols-outlined">menu</span></button><span class="text-[15px] font-semibold text-[#1A0E0C]" id="page-title">Dashboard</span><span class="bg-[#D1FAE5] text-[#065F3A] text-[10px] font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">🔥 LIVE bec-bagalkote-rutu</span></div>
+            <div class="flex items-center gap-3"><span class="text-[13px] text-[#6B5A55] hidden sm:inline" id="header-user">—</span><div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#DC2626] to-[#7F1D1D] text-white text-[12px] flex items-center justify-center font-bold" id="header-avatar">MB</div></div>
+        </header>
+        <main class="app-main p-6">
+            <div id="view-dashboard" class="view-section hidden">
+                <div class="flex items-center justify-between mb-6 flex-wrap gap-3"><div><h1 class="text-2xl font-bold font-display">Dashboard 🔥 LIVE</h1><p class="text-[14px] text-[#6B5A55]" id="dash-subtitle">Project: bec-bagalkote-rutu • Real-time sync</p></div><button class="btn-primary" onclick="openAddSubjectModal()"><span class="material-symbols-outlined text-[18px]">add</span>Add Subject</button></div>
+                <div class="academic-info-bar mb-6"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[#D4A745]">calendar_month</span><div><div class="text-[10px] opacity-50 uppercase">Academic Year</div><div class="font-bold" id="dash-academic-year">2025-26</div></div></div><div class="w-px h-6 bg-white/10"></div><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[#D4A745]">school</span><div><div class="text-[10px] opacity-50 uppercase">Project</div><div class="font-bold">bec-bagalkote-rutu • 2BA</div></div></div><div class="ml-auto bg-[#D1FAE5] text-[#065F3A] px-3 py-1 rounded-full text-[11px] font-bold">● LIVE SYNC</div></div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="dash-stats"></div>
+                <div class="card p-5 mb-6"><h3 class="font-display font-semibold mb-3 flex items-center gap-2">📚 My Subjects (Firestore LIVE - bec-bagalkote-rutu)</h3><div id="dash-subjects" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div></div>
+                <div class="card p-5"><h3 class="font-semibold mb-3">🔥 Firestore Collections</h3><div class="text-[12px] bg-[#F1EDEB] p-3 rounded"><b>Your project: bec-bagalkote-rutu</b><br>• colleges/bec_bagalkote_001 {name:BEC Bagalkote, code:2BA, branches:11, divisions:A-O, studentsPerDiv:60}<br>• subjects/{id} {code:21CS53, name:DBMS, sem:V, div:A, branch:CSE, strength:60}<br>• attendance/{subjectId}_{date} {absent:[5,12]}<br>• users/{email} {name, role, sem, div, branch}</div></div>
+            </div>
+            <div id="view-my-subjects" class="view-section hidden">
+                <div class="flex items-center justify-between mb-6"><div><h1 class="text-2xl font-bold font-display">My Subjects 🔥 LIVE</h1><p class="text-[14px] text-[#6B5A55]">Collection: subjects in bec-bagalkote-rutu</p></div><button class="btn-primary" onclick="openAddSubjectModal()"><span class="material-symbols-outlined">add</span>Add Subject</button></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="subjects-grid"></div>
+            </div>
+            <div id="view-attendance" class="view-section hidden">
+                <div class="mb-6"><h1 class="text-2xl font-bold font-display">Attendance 🔥 LIVE</h1><p class="text-[14px] text-[#6B5A55]">Collection: attendance in bec-bagalkote-rutu • 60 students • A-O</p></div>
+                <div class="card p-5">
+                    <div class="flex flex-wrap items-end gap-4 mb-4">
+                        <div class="flex-1 min-w-[160px]"><label class="form-label">Subject (Firestore LIVE)</label><select id="attendance-subject" class="form-select"></select></div>
+                        <div><label class="form-label">Date</label><input type="date" id="attendance-date" class="form-input"></div>
+                        <button class="btn-secondary" onclick="loadAttendance()">Load from LIVE Firebase</button>
+                    </div>
+                    <p class="text-[12px] text-[#6B5A55] mb-3" id="attendance-strength-info">Strength: --</p>
+                    <div id="roll-grid" class="attendance-grid"></div>
+                    <div class="flex flex-wrap gap-3 items-center mt-4 p-4 bg-[#FDFBFA] rounded-lg border">
+                        <button class="btn-success" onclick="markAllPresent()">All Present</button>
+                        <button class="btn-danger" onclick="markAllAbsent()">All Absent</button>
+                        <div class="flex-1 min-w-[200px] bg-white p-2 rounded border text-[13px]" id="selected-info"><b>Absent:</b> None</div>
+                        <button class="btn-secondary" onclick="submitAttendance()">💾 Save to LIVE Firebase</button>
+                    </div>
+                    <div id="attendance-history-wrap" class="mt-4 hidden"><h4 class="font-bold mb-2">History (LIVE Firebase)</h4><div id="history-list" class="space-y-2 max-h-60 overflow-y-auto"></div></div>
+                    <button class="btn-ghost mt-3 text-[13px]" onclick="document.getElementById('attendance-history-wrap').classList.toggle('hidden'); renderHistory();">Show History</button>
+                </div>
+            </div>
+            <div id="view-student" class="view-section hidden"><div class="bg-gradient-to-br from-[#0A1628] to-[#1a3a5c] rounded-xl p-6 text-white mb-6"><h2 class="text-xl font-bold" id="student-hero-title">🎓 Student Portal LIVE</h2><p class="text-[13px] opacity-80" id="student-hero-sub">bec-bagalkote-rutu filtered: Sem+Div+Branch</p><div class="flex gap-4 mt-2 text-[12px]"><span>📚 <span id="student-hero-semester">—</span></span><span>📋 Div <span id="student-hero-division">—</span></span><span>🏛 <span id="student-hero-branch">—</span></span></div></div><div id="student-tab-content"></div></div>
+            <div id="view-teacher" class="view-section hidden"><div class="bg-gradient-to-br from-[#7F1D1D] to-[#991B1B] rounded-xl p-6 text-white mb-6"><h2 class="text-xl font-bold">👨🏫 Faculty Portal 🔥 LIVE</h2><p class="text-[13px] opacity-80"><span id="teacher-hero-subject-count">0</span> Subjects • <span id="teacher-hero-student-count">0</span> Students • LIVE bec-bagalkote-rutu</p></div><div id="teacher-tab-content"></div></div>
+            <div id="view-admin-users" class="view-section hidden"><h1 class="text-2xl font-bold font-display mb-4">User Management 🔥 LIVE</h1><p class="text-[12px] text-[#6B5A55] mb-4">Collection: users in bec-bagalkote-rutu • Admin: mmbbec@gmail.com</p><div class="card overflow-hidden"><table class="data-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Sem/Div/Branch</th><th>Actions</th></tr></thead><tbody id="admin-users-table"></tbody></table></div></div>
+            <div id="view-admin-settings" class="view-section hidden"><h1 class="text-2xl font-bold font-display mb-4">Academic Settings 🔥 LIVE</h1><div class="card p-5"><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="form-label">Academic Year</label><input id="academic-year" class="form-input" value="2025-26" /></div><div><label class="form-label">Semester Type</label><select id="semester-type" class="form-select"><option>ODD</option><option>EVEN</option></select></div><div class="flex items-end"><button class="btn-secondary w-full" onclick="saveAcademicSettings()">Save to LIVE Firebase</button></div></div><div class="mt-6 p-3 bg-[#D1FAE5] rounded border border-[#6EE7B7] text-[12px] text-[#065F3A]"><b>✅ LIVE Project: bec-bagalkote-rutu</b><br>Firestore auto-creates: colleges/bec_bagalkote_001, subjects, attendance, users<br>Your API Key: AIzaSyAOuv2gSS... (775080596351)<br>Upload this file to mahadevbiradar.in/rutu/ and it will be LIVE for 60 students A-O</div></div></div>
+        </main>
     </div>
-    <div class="px-4 py-3 border-b border-white/10">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#DC2626] to-[#7F1D1D] text-white flex items-center justify-center font-bold text-[14px] flex-shrink-0" id="sidebar-avatar">MB</div>
-        <div class="min-w-0">
-          <div class="text-[13px] font-semibold text-[#F1F5F9] truncate" id="sidebar-name">—</div>
-          <div class="text-[11px] text-[#94A3B8]" id="sidebar-role">—</div>
-          <div class="text-[10px] text-[#64748B] truncate" id="sidebar-academic"></div>
-        </div>
-        <button onclick="logout()" class="ml-auto text-[#64748B] hover:text-red-400 flex-shrink-0" title="Logout">
-          <span class="material-symbols-outlined text-[20px]">logout</span>
-        </button>
-      </div>
-    </div>
-    <nav class="flex-1 p-3 space-y-1 overflow-y-auto" id="sidebar-nav"></nav>
-    <div class="p-3 text-center text-[10px] text-[#64748B] border-t border-white/10">
-      🔥 LIVE Firebase • bec-bagalkote-rutu<br>60 Students • A–O Div • 2BA<br>Dr. Mahadev Biradar
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <div class="main-content pl-[260px] min-h-screen">
-    <header class="app-header bg-white border-b border-[#E8DCD8] h-16 flex items-center justify-between px-6 sticky top-0 z-40">
-      <div class="flex items-center gap-3 min-w-0">
-        <button class="hamburger-btn show-mobile" onclick="toggleSidebar()" aria-label="Menu">
-          <span class="material-symbols-outlined">menu</span>
-        </button>
-        <span class="text-[15px] font-semibold text-[#1A0E0C] truncate" id="page-title">Dashboard</span>
-        <span class="bg-[#D1FAE5] text-[#065F3A] text-[10px] font-bold px-2.5 py-0.5 rounded-full hide-mobile">🔥 LIVE</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <span class="text-[13px] text-[#6B5A55] hidden sm:inline" id="header-user">—</span>
-        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#DC2626] to-[#7F1D1D] text-white text-[12px] flex items-center justify-center font-bold flex-shrink-0" id="header-avatar">MB</div>
-      </div>
-    </header>
-
-    <main class="app-main p-6">
-
-      <!-- ================= DASHBOARD ================= -->
-      <div id="view-dashboard" class="view-section hidden">
-        <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div>
-            <h1 class="text-2xl font-bold font-display">Dashboard 🔥 LIVE</h1>
-            <p class="text-[14px] text-[#6B5A55]" id="dash-subtitle">Project: bec-bagalkote-rutu • Real-time sync</p>
-          </div>
-          <button class="btn-primary" onclick="openAddSubjectModal()">
-            <span class="material-symbols-outlined text-[18px]">add</span>Add Subject
-          </button>
-        </div>
-
-        <div class="academic-info-bar mb-6">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-[#D4A745]">calendar_month</span>
-            <div>
-              <div class="text-[10px] opacity-50 uppercase">Academic Year</div>
-              <div class="font-bold" id="dash-academic-year">2025-26</div>
-            </div>
-          </div>
-          <div class="w-px h-6 bg-white/10"></div>
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-[#D4A745]">school</span>
-            <div>
-              <div class="text-[10px] opacity-50 uppercase">Project</div>
-              <div class="font-bold">bec-bagalkote-rutu • 2BA</div>
-            </div>
-          </div>
-          <div class="ml-auto bg-[#D1FAE5] text-[#065F3A] px-3 py-1 rounded-full text-[11px] font-bold">● LIVE SYNC</div>
-        </div>
-
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="dash-stats"></div>
-
-        <div class="card p-5 mb-6">
-          <h3 class="font-display font-semibold mb-3 flex items-center gap-2">📚 My Subjects (Firestore LIVE)</h3>
-          <div id="dash-subjects" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-        </div>
-
-        <div class="card p-5">
-          <h3 class="font-semibold mb-3">🔥 Firestore Collections</h3>
-          <div class="text-[12px] bg-[#F1EDEB] p-3 rounded leading-relaxed">
-            <b>Project: bec-bagalkote-rutu</b><br>
-            • colleges/bec_bagalkote_001 {name, code:2BA, branches, divisions:A–O, studentsPerDiv:60}<br>
-            • subjects/{id} {code, name, semester, division, branch, strength, timetable[], notes[], resources[], syllabus}<br>
-            • attendance/{subjectId}_{date} {absent:[5,12]}<br>
-            • users/{email} {name, role, sem, div, branch}
-          </div>
-        </div>
-      </div>
-
-      <!-- ================= MY SUBJECTS ================= -->
-      <div id="view-my-subjects" class="view-section hidden">
-        <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <div>
-            <h1 class="text-2xl font-bold font-display">My Subjects 🔥 LIVE</h1>
-            <p class="text-[14px] text-[#6B5A55]">Collection: <b>subjects</b> in bec-bagalkote-rutu</p>
-          </div>
-          <button class="btn-primary" onclick="openAddSubjectModal()">
-            <span class="material-symbols-outlined">add</span>Add Subject
-          </button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="subjects-grid"></div>
-      </div>
-
-      <!-- ================= SUBJECT DETAIL (NEW — Timetable / Notes / Syllabus / Resources) ================= -->
-      <div id="view-subject-detail" class="view-section hidden">
-        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <button class="btn-ghost" onclick="goBackFromSubjectDetail()">
-            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-            Back
-          </button>
-          <button class="btn-ghost" onclick="openEditCurrentSubject()">
-            <span class="material-symbols-outlined text-[18px]">edit</span>
-            Edit Subject
-          </button>
-        </div>
-
-        <div id="subject-detail-header"></div>
-
-        <div class="card p-2 mb-4 flex items-center gap-1 overflow-x-auto" id="subject-tabs">
-          <button class="tab-btn active" data-tab="overview"  onclick="switchSubjectTab('overview')"><span class="material-symbols-outlined text-[16px]">info</span>Overview</button>
-          <button class="tab-btn" data-tab="timetable" onclick="switchSubjectTab('timetable')"><span class="material-symbols-outlined text-[16px]">calendar_today</span>Timetable</button>
-          <button class="tab-btn" data-tab="notes"     onclick="switchSubjectTab('notes')"><span class="material-symbols-outlined text-[16px]">sticky_note_2</span>Notes</button>
-          <button class="tab-btn" data-tab="syllabus"  onclick="switchSubjectTab('syllabus')"><span class="material-symbols-outlined text-[16px]">menu_book</span>Syllabus</button>
-          <button class="tab-btn" data-tab="resources" onclick="switchSubjectTab('resources')"><span class="material-symbols-outlined text-[16px]">folder_shared</span>Resources</button>
-        </div>
-
-        <div id="subject-tab-content"></div>
-      </div>
-
-      <!-- ================= ATTENDANCE ================= -->
-      <div id="view-attendance" class="view-section hidden">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold font-display">Attendance 🔥 LIVE</h1>
-          <p class="text-[14px] text-[#6B5A55]">Collection: <b>attendance</b> in bec-bagalkote-rutu • 60 students • A–O</p>
-        </div>
-        <div class="card p-5">
-          <div class="flex flex-wrap items-end gap-4 mb-4">
-            <div class="flex-1 min-w-[160px]">
-              <label class="form-label">Subject (Firestore LIVE)</label>
-              <select id="attendance-subject" class="form-select"></select>
-            </div>
-            <div class="flex-1 min-w-[150px]">
-              <label class="form-label">Date</label>
-              <input type="date" id="attendance-date" class="form-input">
-            </div>
-            <button class="btn-secondary flex-shrink-0" onclick="loadAttendance()">Load from LIVE</button>
-          </div>
-
-          <h3 class="font-semibold text-[15px] mb-1">Click roll numbers of <span class="text-[#B91C1C]">ABSENT</span> students</h3>
-          <p class="text-[12px] text-[#6B5A55] mb-3" id="attendance-strength-info">Strength: --</p>
-
-          <div id="roll-grid" class="attendance-grid"></div>
-
-          <div class="attendance-controls">
-            <button class="btn-success" onclick="markAllPresent()">
-              <span class="material-symbols-outlined text-[18px]">check_circle</span> All Present
-            </button>
-            <button class="btn-danger" onclick="markAllAbsent()">
-              <span class="material-symbols-outlined text-[18px]">cancel</span> All Absent
-            </button>
-            <div class="selected-info" id="selected-info"><strong>Selected Absent:</strong> None / All Present</div>
-            <button class="btn-secondary" onclick="submitAttendance()">
-              <span class="material-symbols-outlined text-[18px]">save</span> Save to LIVE
-            </button>
-          </div>
-
-          <div class="mt-4">
-            <button class="btn-ghost text-[13px]" onclick="toggleAttendanceHistory()">
-              <span class="material-symbols-outlined text-[18px]">history</span> Show History
-            </button>
-            <div id="attendance-history-wrap" class="hidden mt-4">
-              <h4 class="font-semibold text-[14px] mb-2">Attendance History (LIVE)</h4>
-              <div id="history-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ================= STUDENT PORTAL ================= -->
-      <div id="view-student" class="view-section hidden">
-        <div class="hero-teacher mb-6" style="background:linear-gradient(135deg,#0A1628 0%,#1a3a5c 100%);">
-          <div class="hero-title" id="student-hero-title">🎓 Student Portal</div>
-          <div class="hero-sub" id="student-hero-sub">Welcome to your academic dashboard</div>
-          <div class="hero-meta">
-            <span>📚 <span id="student-hero-semester">—</span></span>
-            <span>📋 Div <span id="student-hero-division">—</span></span>
-            <span>🏛️ <span id="student-hero-branch">—</span></span>
-            <span>📅 <span id="student-hero-year">2025-26</span></span>
-          </div>
-        </div>
-
-        <div class="role-tab-bar mb-6" id="student-tab-bar">
-          <button class="tab-btn active" data-student-tab="home"      onclick="switchStudentTab('home')"><span class="material-symbols-outlined text-[16px]">home</span>Home</button>
-          <button class="tab-btn" data-student-tab="subjects"   onclick="switchStudentTab('subjects')"><span class="material-symbols-outlined text-[16px]">auto_stories</span>My Subjects</button>
-          <button class="tab-btn" data-student-tab="attendance" onclick="switchStudentTab('attendance')"><span class="material-symbols-outlined text-[16px]">fact_check</span>Attendance</button>
-          <button class="tab-btn" data-student-tab="resources"  onclick="switchStudentTab('resources')"><span class="material-symbols-outlined text-[16px]">folder_shared</span>Resources</button>
-        </div>
-
-        <div id="student-tab-content"></div>
-      </div>
-
-      <!-- ================= TEACHER PORTAL ================= -->
-      <div id="view-teacher" class="view-section hidden">
-        <div class="hero-teacher mb-6">
-          <div class="hero-title">👨‍🏫 Faculty Portal</div>
-          <div class="hero-sub">Manage your subjects, attendance &amp; timetable</div>
-          <div class="hero-meta">
-            <span>📚 <span id="teacher-hero-subject-count">0</span> Subjects</span>
-            <span>🧑‍🎓 <span id="teacher-hero-student-count">0</span> Students</span>
-            <span>📅 <span id="teacher-hero-year">2025-26</span></span>
-          </div>
-        </div>
-
-        <div class="role-tab-bar mb-6" id="teacher-tab-bar">
-          <button class="tab-btn active" data-teacher-tab="home"       onclick="switchTeacherTab('home')"><span class="material-symbols-outlined text-[16px]">home</span>Home</button>
-          <button class="tab-btn" data-teacher-tab="subjects"   onclick="switchTeacherTab('subjects')"><span class="material-symbols-outlined text-[16px]">auto_stories</span>My Subjects</button>
-          <button class="tab-btn" data-teacher-tab="attendance" onclick="switchTeacherTab('attendance')"><span class="material-symbols-outlined text-[16px]">fact_check</span>Attendance</button>
-          <button class="tab-btn" data-teacher-tab="timetable"  onclick="switchTeacherTab('timetable')"><span class="material-symbols-outlined text-[16px]">calendar_today</span>Timetable</button>
-          <button class="tab-btn" data-teacher-tab="resources"  onclick="switchTeacherTab('resources')"><span class="material-symbols-outlined text-[16px]">folder_shared</span>Resources</button>
-        </div>
-
-        <div id="teacher-tab-content"></div>
-      </div>
-
-      <!-- ================= ADMIN USERS ================= -->
-      <div id="view-admin-users" class="view-section hidden">
-        <h1 class="text-2xl font-bold font-display mb-2">User Management 🔥 LIVE</h1>
-        <p class="text-[12px] text-[#6B5A55] mb-4">Collection: <b>users</b> in bec-bagalkote-rutu • Admin: mmbbec@gmail.com</p>
-        <div class="card overflow-hidden overflow-x-auto">
-          <table class="data-table">
-            <thead>
-              <tr><th>User</th><th>Email</th><th>Role</th><th>Sem / Div / Branch</th><th class="text-right">Actions</th></tr>
-            </thead>
-            <tbody id="admin-users-table"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ================= ADMIN SETTINGS ================= -->
-      <div id="view-admin-settings" class="view-section hidden">
-        <h1 class="text-2xl font-bold font-display mb-4">Academic Settings 🔥 LIVE</h1>
-        <div class="card p-5">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div><label class="form-label">Academic Year</label><input id="academic-year" class="form-input" value="2025-26" /></div>
-            <div>
-              <label class="form-label">Semester Type</label>
-              <select id="semester-type" class="form-select"><option>ODD</option><option>EVEN</option><option>SUMMER</option></select>
-            </div>
-            <div class="flex items-end">
-              <button class="btn-secondary w-full justify-center" onclick="saveAcademicSettings()">Save to LIVE Firebase</button>
-            </div>
-          </div>
-          <div class="mt-6 p-3 bg-[#D1FAE5] rounded border border-[#6EE7B7] text-[12px] text-[#065F3A] leading-relaxed">
-            <b>✅ LIVE Project: bec-bagalkote-rutu</b><br>
-            Firestore auto-creates: colleges/bec_bagalkote_001, subjects, attendance, users<br>
-            Upload this file to mahadevbiradar.in/rutu/ and it will be LIVE for 60 students A–O
-          </div>
-        </div>
-      </div>
-
-    </main>
-  </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- MODALS                                                        -->
-<!-- ============================================================ -->
+<div id="subject-modal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4"><div class="modal-content"><div class="flex items-center justify-between p-4 border-b"><h3 id="subject-modal-title" class="font-bold text-[18px]">Add Subject to LIVE Firebase</h3><button onclick="closeSubjectModal()"><span class="material-symbols-outlined">close</span></button></div><form class="p-4 space-y-4" onsubmit="handleSubjectSubmit(event)"><input type="hidden" id="subject-form-id" /><div class="grid grid-cols-2 gap-3"><div><label class="form-label">Subject Name *</label><input id="subject-name" required class="form-input" placeholder="Engineering Mathematics / DBMS" /></div><div><label class="form-label">Subject Code *</label><input id="subject-code" required class="form-input" placeholder="21CS53" /></div></div><div class="grid grid-cols-3 gap-3"><div><label class="form-label">Semester</label><select id="subject-semester" class="form-select"></select></div><div><label class="form-label">Division A-O</label><select id="subject-division" class="form-select"></select></div><div><label class="form-label">Branch</label><select id="subject-branch" class="form-select"></select></div></div><div><label class="form-label">Student Strength (60 for CSE A)</label><input id="subject-strength" type="number" min="1" max="200" class="form-input" value="60" /></div><div class="flex justify-end gap-2 pt-2 border-t"><button type="button" class="btn-ghost" onclick="closeSubjectModal()">Cancel</button><button type="submit" class="btn-secondary">💾 Save to LIVE Firebase bec-bagalkote-rutu</button></div></form></div></div>
 
-<!-- Subject Modal -->
-<div id="subject-modal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
-  <div class="modal-content">
-    <div class="modal-header flex items-center justify-between">
-      <h3 id="subject-modal-title" class="font-display font-bold text-[18px]">Add Subject to LIVE Firebase</h3>
-      <button class="p-1 rounded hover:bg-[#F1EDEB] transition" onclick="closeSubjectModal()">
-        <span class="material-symbols-outlined text-[22px]">close</span>
-      </button>
-    </div>
-    <form class="modal-body space-y-4" onsubmit="handleSubjectSubmit(event)">
-      <input type="hidden" id="subject-form-id" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div><label class="form-label">Subject Name *</label><input id="subject-name" required class="form-input" placeholder="Engineering Mathematics / DBMS" /></div>
-        <div><label class="form-label">Subject Code *</label><input id="subject-code" required class="form-input" placeholder="21CS53" /></div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div><label class="form-label">Semester</label><select id="subject-semester" class="form-select"></select></div>
-        <div><label class="form-label">Division A–O</label><select id="subject-division" class="form-select"></select></div>
-        <div><label class="form-label">Branch</label><select id="subject-branch" class="form-select"></select></div>
-      </div>
-      <div><label class="form-label">Student Strength (60 for CSE A)</label><input id="subject-strength" type="number" min="1" max="200" class="form-input" value="60" /></div>
-      <div class="modal-footer">
-        <button type="button" class="btn-ghost" onclick="closeSubjectModal()">Cancel</button>
-        <button type="submit" class="btn-secondary">💾 Save to LIVE Firebase</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Timetable Modal -->
-<div id="timetable-modal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
-  <div class="modal-content max-w-md">
-    <div class="modal-header flex items-center justify-between">
-      <h3 class="font-display font-bold text-[18px]">📅 Add Timetable Slot</h3>
-      <button class="p-1 rounded hover:bg-[#F1EDEB] transition" onclick="closeTimetableModal()">
-        <span class="material-symbols-outlined text-[22px]">close</span>
-      </button>
-    </div>
-    <form class="modal-body space-y-4" onsubmit="handleTimetableSubmit(event)">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="form-label">Day</label>
-          <select id="tt-day" class="form-select">
-            <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-            <option>Thursday</option><option>Friday</option><option>Saturday</option>
-          </select>
-        </div>
-        <div><label class="form-label">Room</label><input id="tt-room" type="text" class="form-input" placeholder="E-204" /></div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div><label class="form-label">Start Time</label><input id="tt-start" type="text" class="form-input" placeholder="09:00 AM" required /></div>
-        <div><label class="form-label">End Time</label><input id="tt-end" type="text" class="form-input" placeholder="10:00 AM" required /></div>
-      </div>
-      <div><label class="form-label">Topic / Remarks</label><input id="tt-topic" type="text" class="form-input" placeholder="Lecture on ..." /></div>
-      <div class="modal-footer">
-        <button type="button" class="btn-ghost" onclick="closeTimetableModal()">Cancel</button>
-        <button type="submit" class="btn-secondary">Add Slot</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Note Modal -->
-<div id="note-modal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
-  <div class="modal-content max-w-md">
-    <div class="modal-header flex items-center justify-between">
-      <h3 class="font-display font-bold text-[18px]">📝 Add Note</h3>
-      <button class="p-1 rounded hover:bg-[#F1EDEB] transition" onclick="closeNoteModal()">
-        <span class="material-symbols-outlined text-[22px]">close</span>
-      </button>
-    </div>
-    <form class="modal-body space-y-4" onsubmit="handleNoteSubmit(event)">
-      <div><label class="form-label">Note Title *</label><input id="note-title" required type="text" class="form-input" placeholder="e.g. Lecture 1 Summary" /></div>
-      <div><label class="form-label">Content</label><textarea id="note-content" rows="3" class="form-textarea" placeholder="Write your note..."></textarea></div>
-      <div>
-        <label class="form-label">Link Type</label>
-        <select id="note-link-type" class="form-select">
-          <option value="google-drive">Google Drive</option>
-          <option value="google-sheet">Google Sheet</option>
-          <option value="web-url">Web URL</option>
-        </select>
-      </div>
-      <div><label class="form-label">Link URL</label><input id="note-link" type="url" class="form-input" placeholder="https://..." /></div>
-      <div class="modal-footer">
-        <button type="button" class="btn-ghost" onclick="closeNoteModal()">Cancel</button>
-        <button type="submit" class="btn-secondary">Save</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Syllabus Modal -->
-<div id="syllabus-modal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
-  <div class="modal-content max-w-md">
-    <div class="modal-header flex items-center justify-between">
-      <h3 class="font-display font-bold text-[18px]">📖 Edit Syllabus</h3>
-      <button class="p-1 rounded hover:bg-[#F1EDEB] transition" onclick="closeSyllabusModal()">
-        <span class="material-symbols-outlined text-[22px]">close</span>
-      </button>
-    </div>
-    <form class="modal-body space-y-4" onsubmit="handleSyllabusSubmit(event)">
-      <div><label class="form-label">Syllabus Content</label><textarea id="syl-content" rows="4" class="form-textarea" placeholder="Enter syllabus details..."></textarea></div>
-      <div>
-        <label class="form-label">Link Type</label>
-        <select id="syl-link-type" class="form-select">
-          <option value="google-drive">Google Drive</option>
-          <option value="google-sheet">Google Sheet</option>
-          <option value="web-url">Web URL</option>
-        </select>
-      </div>
-      <div><label class="form-label">Link URL</label><input id="syl-link" type="url" class="form-input" placeholder="https://..." /></div>
-      <div class="modal-footer">
-        <button type="button" class="btn-ghost" onclick="closeSyllabusModal()">Cancel</button>
-        <button type="submit" class="btn-secondary">Save</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Resource Modal -->
-<div id="resource-modal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4">
-  <div class="modal-content max-w-md">
-    <div class="modal-header flex items-center justify-between">
-      <h3 class="font-display font-bold text-[18px]">📁 Add Resource</h3>
-      <button class="p-1 rounded hover:bg-[#F1EDEB] transition" onclick="closeResourceModal()">
-        <span class="material-symbols-outlined text-[22px]">close</span>
-      </button>
-    </div>
-    <form class="modal-body space-y-4" onsubmit="handleResourceSubmit(event)">
-      <div><label class="form-label">Resource Title *</label><input id="res-title" required type="text" class="form-input" placeholder="e.g. Calculus Notes" /></div>
-      <div>
-        <label class="form-label">Resource Type</label>
-        <select id="res-type" class="form-select">
-          <option value="notes">Notes</option>
-          <option value="assignment">Assignment</option>
-          <option value="question-paper">Question Paper</option>
-          <option value="video">Video</option>
-          <option value="presentation">Presentation</option>
-          <option value="reference">Reference</option>
-        </select>
-      </div>
-      <div><label class="form-label">Description</label><textarea id="res-desc" rows="2" class="form-textarea" placeholder="Brief description..."></textarea></div>
-      <div>
-        <label class="form-label">Link Type</label>
-        <select id="res-link-type" class="form-select">
-          <option value="google-drive">Google Drive</option>
-          <option value="google-sheet">Google Sheet</option>
-          <option value="web-url">Web URL</option>
-        </select>
-      </div>
-      <div><label class="form-label">Link URL *</label><input id="res-link" required type="url" class="form-input" placeholder="https://..." /></div>
-      <div class="modal-footer">
-        <button type="button" class="btn-ghost" onclick="closeResourceModal()">Cancel</button>
-        <button type="submit" class="btn-secondary">Save</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- SCRIPT                                                        -->
-<!-- ============================================================ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* ============================================================
-   1. FIREBASE INIT
-   ============================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyAOuv2gSSUsac3HOOcmtOnrft8Qz5oaDEY",
   authDomain: "bec-bagalkote-rutu.firebaseapp.com",
@@ -741,1882 +141,272 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const db = getFirestore(app);
 window.db = db;
+document.getElementById('firebase-status').textContent = "🟢 LIVE bec-bagalkote-rutu CONNECTED";
+document.getElementById('firebase-status').className = "firebase-status connected";
+console.log("🔥 Firebase LIVE connected: bec-bagalkote-rutu", firebaseConfig.projectId);
 
-const statusEl = document.getElementById('firebase-status');
-statusEl.textContent = "🟢 LIVE bec-bagalkote-rutu CONNECTED";
-statusEl.className = "firebase-status connected";
-console.log("🔥 Firebase LIVE connected:", firebaseConfig.projectId);
+window.subjects = [];
+window.attendanceData = {};
+window.currentView = 'dashboard';
+window.currentSubjectId = null;
+window.selectedAbsent = new Set();
+window.currentAttendanceSubjectId = null;
 
-/* ============================================================
-   2. MODULE-SCOPED STATE  (safe inside ES module / strict mode)
-   ============================================================ */
-let subjects              = [];   // live subjects array
-let attendanceData        = {};   // { "subId_date": {subjectId,date,absent:Set} }
-let currentView           = 'dashboard';
-let currentSubjectId      = null;
-let currentTab            = 'overview';
-let previousView          = 'my-subjects';
-let selectedAbsent        = new Set();
-let currentAttendanceSubjectId = null;
-let studentTab            = 'home';
-let teacherTab            = 'home';
-let unsubSubjects         = null;
+window.showToast = (msg,type='info')=>{ const el=document.getElementById('toast'); el.innerHTML=msg; el.className='toast '+type; void el.offsetWidth; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),4000); };
 
-/* constants */
-const DEFAULT_BRANCHES = [
-  'Civil Engineering','Mechanical Engineering','Electrical and Electronics Engineering',
-  'Electronics and Communication Engineering','Computer Science and Engineering',
-  'Information Science and Engineering','Artificial Intelligence and Machine Learning',
-  'Automobile Engineering','Industrial and Production Engineering','Biotechnology',
-  'Electronics and Computer Engineering'
-];
+const DEFAULT_BRANCHES = ['Civil Engineering','Mechanical Engineering','Electrical and Electronics Engineering','Electronics and Communication Engineering','Computer Science and Engineering','Information Science and Engineering','Artificial Intelligence and Machine Learning','Automobile Engineering','Industrial and Production Engineering','Biotechnology','Electronics and Computer Engineering'];
 const DEFAULT_DIVISIONS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O'];
-const DEFAULT_SEMS = ['I Semester','II Semester','III Semester','IV Semester',
-                      'V Semester','VI Semester','VII Semester','VIII Semester'];
+const DEFAULT_SEMS = ['I Semester','II Semester','III Semester','IV Semester','V Semester','VI Semester','VII Semester','VIII Semester'];
 
-/* ============================================================
-   3. TOAST
-   ============================================================ */
-let toastTimer = null;
-window.showToast = (msg, type = 'info') => {
-  const el = document.getElementById('toast');
-  el.innerHTML = msg;
-  el.className = 'toast ' + type;
-  void el.offsetWidth;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 4200);
+window.populateSelect = (id, opts, sel)=>{ const el=document.getElementById(id); if(!el) return; el.innerHTML=''; opts.forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(o===sel) op.selected=true; el.appendChild(op); }); };
+window.populateAcademicDropdowns = ()=>{ populateSelect('signup-semester', DEFAULT_SEMS, DEFAULT_SEMS[0]); populateSelect('signup-division', DEFAULT_DIVISIONS, DEFAULT_DIVISIONS[0]); populateSelect('signup-branch', DEFAULT_BRANCHES, DEFAULT_BRANCHES[0]); populateSelect('subject-semester', DEFAULT_SEMS, DEFAULT_SEMS[0]); populateSelect('subject-division', DEFAULT_DIVISIONS, DEFAULT_DIVISIONS[0]); populateSelect('subject-branch', DEFAULT_BRANCHES, DEFAULT_BRANCHES[0]); };
+
+window.getUsers = async ()=>{
+  try{ const snap=await getDocs(collection(db,'users')); const list=[]; snap.forEach(d=>list.push(d.data())); if(!list.find(u=>u.email==='mmbbec@gmail.com')){ const admin={email:'mmbbec@gmail.com',password:'admin123',name:'Admin',role:'admin',semester:'I Semester',division:'A',branch:'Mathematics',collegeId:'bec_bagalkote_001'}; await setDoc(doc(db,'users','mmbbec@gmail.com'), admin); list.push(admin); } return list; }catch(e){ console.error(e); return [{email:'mmbbec@gmail.com',password:'admin123',name:'Admin',role:'admin'}]; }
 };
-
-/* ============================================================
-   4. SELECT HELPERS
-   ============================================================ */
-window.populateSelect = (id, opts, sel) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.innerHTML = '';
-  opts.forEach(o => {
-    const op = document.createElement('option');
-    op.value = o; op.textContent = o;
-    if (o === sel) op.selected = true;
-    el.appendChild(op);
-  });
-};
-
-window.populateAcademicDropdowns = () => {
-  populateSelect('signup-semester',  DEFAULT_SEMS,     DEFAULT_SEMS[0]);
-  populateSelect('signup-division',  DEFAULT_DIVISIONS, DEFAULT_DIVISIONS[0]);
-  populateSelect('signup-branch',    DEFAULT_BRANCHES,  DEFAULT_BRANCHES[0]);
-  populateSelect('subject-semester', DEFAULT_SEMS,     DEFAULT_SEMS[0]);
-  populateSelect('subject-division', DEFAULT_DIVISIONS, DEFAULT_DIVISIONS[0]);
-  populateSelect('subject-branch',   DEFAULT_BRANCHES,  DEFAULT_BRANCHES[0]);
-};
-
-/* ============================================================
-   5. AUTH  (users collection in Firestore)
-   ============================================================ */
-window.getUsers = async () => {
-  try {
-    const snap = await getDocs(collection(db, 'users'));
-    const list = [];
-    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-
-    if (!list.find(u => u.email === 'mmbbec@gmail.com')) {
-      const admin = {
-        email: 'mmbbec@gmail.com', password: 'admin123', name: 'Admin',
-        role: 'admin', semester: 'I Semester', division: 'A',
-        branch: 'Mathematics', collegeId: 'bec_bagalkote_001'
-      };
-      await setDoc(doc(db, 'users', admin.email), admin);
-      list.push(admin);
-    }
-    return list;
-  } catch (e) {
-    console.error('getUsers failed:', e);
-    return [{ email: 'mmbbec@gmail.com', password: 'admin123', name: 'Admin', role: 'admin' }];
-  }
-};
-
-window.saveUserToFirebase = async (user) => {
-  await setDoc(doc(db, 'users', user.email), user, { merge: true });
-};
-
-window.handleLogin = async () => {
-  const email = document.getElementById('login-email').value.trim();
-  const pw    = document.getElementById('login-password').value.trim();
-  if (!email || !pw) { showToast('Enter email & password', 'error'); return; }
-
-  const users = await getUsers();
-  const user  = users.find(u => u.email === email && u.password === pw);
-  if (!user) { showToast('Invalid credentials — check Firestore <b>users</b> collection', 'error'); return; }
-
-  localStorage.setItem('bec_session', JSON.stringify({
-    email: user.email, role: user.role, name: user.name,
-    semester: user.semester || '', division: user.division || '', branch: user.branch || ''
-  }));
-  showToast('Welcome ' + user.name + ' 🔥 LIVE', 'success');
+window.saveUserToFirebase = async (user)=>{ await setDoc(doc(db,'users', user.email), user, {merge:true}); };
+window.handleLogin = async ()=>{
+  const email=document.getElementById('login-email').value.trim();
+  const pw=document.getElementById('login-password').value.trim();
+  if(!email||!pw){ showToast('Enter email & password','error'); return; }
+  const users=await getUsers();
+  const user=users.find(u=>u.email===email && u.password===pw);
+  if(!user){ showToast('Invalid credentials - check Firestore users collection','error'); return; }
+  localStorage.setItem('bec_session', JSON.stringify({email:user.email, role:user.role, name:user.name, semester:user.semester, division:user.division, branch:user.branch}));
+  showToast('Welcome '+user.name+' 🔥 LIVE bec-bagalkote-rutu','success');
   initApp();
 };
-
-window.handleSignup = async () => {
-  const name   = document.getElementById('signup-name').value.trim();
-  const email  = document.getElementById('signup-email').value.trim();
-  const pw     = document.getElementById('signup-password').value.trim() || '1234';
-  const role   = document.getElementById('signup-role').value;
-  let   sem    = document.getElementById('signup-semester').value;
-  let   div    = document.getElementById('signup-division').value;
-  let   branch = document.getElementById('signup-branch').value;
-
-  if (role === 'teacher') { sem = ''; div = ''; branch = ''; }
-  if (!name || !email) { showToast('Fill all fields', 'error'); return; }
-
-  const users = await getUsers();
-  if (users.some(u => u.email === email)) { showToast('Email already exists', 'error'); return; }
-
-  const newUser = {
-    name, email, password: pw, role,
-    semester: sem, division: div, branch,
-    collegeId: 'bec_bagalkote_001', collegeCode: '2BA',
-    createdAt: new Date().toISOString()
-  };
+window.handleSignup = async ()=>{
+  const name=document.getElementById('signup-name').value.trim();
+  const email=document.getElementById('signup-email').value.trim();
+  const pw=document.getElementById('signup-password').value.trim()||'1234';
+  const role=document.getElementById('signup-role').value;
+  let sem=document.getElementById('signup-semester').value;
+  let div=document.getElementById('signup-division').value;
+  let branch=document.getElementById('signup-branch').value;
+  if(role==='teacher'){ sem=''; div=''; branch=''; }
+  if(!name||!email){ showToast('Fill all fields','error'); return; }
+  const users=await getUsers();
+  if(users.some(u=>u.email===email)){ showToast('Email already exists','error'); return; }
+  const newUser={name,email,password:pw,role,semester:sem,division:div,branch,collegeId:'bec_bagalkote_001',collegeCode:'2BA',createdAt:new Date().toISOString()};
   await saveUserToFirebase(newUser);
-  showToast('✅ Account created in LIVE Firebase! Now sign in', 'success');
+  showToast('✅ Account created in LIVE Firebase bec-bagalkote-rutu! Now sign in','success');
   showLogin();
-  document.getElementById('login-email').value = email;
-  document.getElementById('login-password').value = '';
+  document.getElementById('login-email').value=email;
 };
+window.showLogin = ()=>{ document.getElementById('login-form').classList.remove('hidden'); document.getElementById('signup-form').classList.add('hidden'); };
+window.showSignup = ()=>{ document.getElementById('login-form').classList.add('hidden'); document.getElementById('signup-form').classList.remove('hidden'); populateAcademicDropdowns(); selectRole('teacher'); };
+window.selectRole = (role)=>{ document.getElementById('signup-role').value=role; document.getElementById('role-teacher').classList.toggle('active', role==='teacher'); document.getElementById('role-student').classList.toggle('active', role==='student'); };
+window.getSession = ()=>{ try{ const r=localStorage.getItem('bec_session'); return r?JSON.parse(r):null; }catch(e){ return null; } };
+window.getCurrentUser = ()=>{ const s=getSession(); if(!s) return null; return s; };
+window.logout = ()=>{ localStorage.removeItem('bec_session'); location.reload(); };
 
-window.showLogin  = () => {
-  document.getElementById('login-form').classList.remove('hidden');
-  document.getElementById('signup-form').classList.add('hidden');
-};
-window.showSignup = () => {
-  document.getElementById('login-form').classList.add('hidden');
-  document.getElementById('signup-form').classList.remove('hidden');
-  populateAcademicDropdowns();
-  selectRole('teacher');
-};
-window.selectRole = (role) => {
-  document.getElementById('signup-role').value = role;
-  document.getElementById('role-teacher').classList.toggle('active', role === 'teacher');
-  document.getElementById('role-student').classList.toggle('active', role === 'student');
-  // Show/hide branch selection for teacher
-  const branchGroup = document.getElementById('branch-group');
-  if (branchGroup) branchGroup.style.display = (role === 'teacher') ? 'none' : 'block';
-};
-
-window.getSession = () => {
-  try { const r = localStorage.getItem('bec_session'); return r ? JSON.parse(r) : null; }
-  catch (e) { return null; }
-};
-window.getCurrentUser = () => getSession();
-window.logout = () => { localStorage.removeItem('bec_session'); location.reload(); };
-
-/* ============================================================
-   6. SUBJECTS — LIVE LISTENER + CRUD
-   ============================================================ */
-window.loadSubjectsLive = () => {
-  if (unsubSubjects) unsubSubjects();       // avoid duplicate listeners
-  unsubSubjects = onSnapshot(collection(db, 'subjects'), (snap) => {
-    const list = [];
-    snap.forEach(d => {
-      const data = d.data();
-      list.push({
-        id: d.id,
-        ...data,
-        timetable: Array.isArray(data.timetable) ? data.timetable : [],
-        notes:     Array.isArray(data.notes)     ? data.notes     : [],
-        resources: Array.isArray(data.resources) ? data.resources : [],
-        syllabus:  data.syllabus || null,
-        strength:  parseInt(data.strength) || 60
-      });
-    });
-    subjects = list;
-    console.log('🔥 LIVE subjects:', list.length);
-    statusEl.textContent = `🟢 LIVE • ${list.length} subject${list.length !== 1 ? 's' : ''}`;
+window.loadSubjectsLive = ()=>{
+  onSnapshot(collection(db,'subjects'), (snap)=>{
+    const list=[];
+    snap.forEach(d=> list.push({id:d.id, ...d.data()}));
+    window.subjects = list;
+    console.log('🔥 LIVE subjects from bec-bagalkote-rutu:', list.length);
+    document.getElementById('firebase-status').textContent = `🟢 LIVE • ${list.length} subjects`;
     renderAll();
-  }, (err) => {
-    console.error('subjects onSnapshot error:', err);
-    showToast('Firebase error: ' + err.message, 'error');
-    statusEl.textContent = '🔴 ERROR';
-    statusEl.className = 'firebase-status offline';
-  });
+  }, (err)=>{ console.error(err); showToast('Firebase error: '+err.message,'error'); document.getElementById('firebase-status').textContent='🔴 ERROR: '+err.message; document.getElementById('firebase-status').className='firebase-status offline'; });
 };
+window.saveSubjectToFirebase = async (subj)=>{ await setDoc(doc(db,'subjects', subj.id), {...subj, collegeId:'bec_bagalkote_001', projectId:'bec-bagalkote-rutu', updatedAt:new Date().toISOString()}, {merge:true}); };
+window.deleteSubjectFromFirebase = async (id)=>{ await deleteDoc(doc(db,'subjects', id)); };
 
-/* Save full subject (create / edit) */
-window.saveSubjectToFirebase = async (subj) => {
-  await setDoc(doc(db, 'subjects', subj.id), {
-    ...subj,
-    collegeId: 'bec_bagalkote_001',
-    projectId: 'bec-bagalkote-rutu',
-    updatedAt: new Date().toISOString()
-  }, { merge: true });
+window.loadAttendanceDataFirebase = async ()=>{
+  try{ const snap=await getDocs(collection(db,'attendance')); const map={}; snap.forEach(d=>{ const data=d.data(); map[d.id]={...data, absent:new Set(data.absent||[])} }); window.attendanceData=map; }catch(e){ console.error(e); }
 };
+window.saveAttendanceToFirebase = async (key, rec)=>{ await setDoc(doc(db,'attendance', key), {subjectId:rec.subjectId, date:rec.date, absent:Array.from(rec.absent), collegeId:'bec_bagalkote_001', updatedAt:new Date().toISOString()}); };
 
-/* Save only a patch (used by timetable / notes / syllabus / resources) */
-async function patchSubject(id, patch) {
-  await setDoc(doc(db, 'subjects', id), {
-    ...patch,
-    updatedAt: new Date().toISOString()
-  }, { merge: true });
-}
-window.patchSubject = patchSubject;
-
-window.deleteSubjectFromFirebase = async (id) => {
-  await deleteDoc(doc(db, 'subjects', id));
+window.renderAll = ()=>{
+  if(currentView==='dashboard') renderDashboard();
+  else if(currentView==='my-subjects') renderMySubjects();
+  else if(currentView==='attendance') renderAttendanceView();
+  else if(currentView==='student') renderStudentWebsite();
+  else if(currentView==='teacher') renderTeacherWebsite();
+  else if(currentView==='admin-users') renderAdminUsers();
 };
-
-/* ============================================================
-   7. ATTENDANCE
-   ============================================================ */
-window.loadAttendanceDataFirebase = async () => {
-  try {
-    const snap = await getDocs(collection(db, 'attendance'));
-    const map = {};
-    snap.forEach(d => {
-      const data = d.data();
-      map[d.id] = { ...data, absent: new Set(data.absent || []) };
-    });
-    attendanceData = map;
-    console.log('🔥 LIVE attendance docs:', Object.keys(map).length);
-  } catch (e) { console.error('attendance load failed:', e); }
-};
-
-window.saveAttendanceToFirebase = async (key, rec) => {
-  await setDoc(doc(db, 'attendance', key), {
-    subjectId: rec.subjectId,
-    date: rec.date,
-    absent: Array.from(rec.absent),
-    collegeId: 'bec_bagalkote_001',
-    updatedAt: new Date().toISOString()
-  });
-};
-
-/* ============================================================
-   8. RENDER DISPATCHER
-   ============================================================ */
-window.renderAll = () => {
-  if      (currentView === 'dashboard')       renderDashboard();
-  else if (currentView === 'my-subjects')     renderMySubjects();
-  else if (currentView === 'subject-detail')  renderSubjectDetail();
-  else if (currentView === 'attendance')      renderAttendanceView();
-  else if (currentView === 'student')         renderStudentWebsite();
-  else if (currentView === 'teacher')         renderTeacherWebsite();
-  else if (currentView === 'admin-users')     renderAdminUsers();
-  else if (currentView === 'admin-settings')  renderAdminSettings();
-};
-
-/* ============================================================
-   9. DASHBOARD
-   ============================================================ */
-window.renderDashboard = () => {
-  const stats = document.getElementById('dash-stats');
-  if (!stats) return;
-
-  const total = subjects.length;
-  let totalStudents = 0, totalSlots = 0, totalRes = 0;
-  subjects.forEach(s => {
-    totalStudents += parseInt(s.strength) || 60;
-    totalSlots    += (s.timetable || []).length;
-    totalRes      += (s.resources || []).length + (s.notes || []).length;
-  });
-
-  stats.innerHTML = `
-    <div class="card-stat"><div class="text-[11px] font-semibold text-[#6B5A55] uppercase">Total Subjects</div>
-      <div class="text-3xl font-bold font-display">${total}</div>
-      <div class="text-[11px] text-[#065F3A]">🔥 bec-bagalkote-rutu</div></div>
-    <div class="card-stat"><div class="text-[11px] font-semibold text-[#6B5A55] uppercase">Total Students</div>
-      <div class="text-3xl font-bold font-display">${totalStudents}</div>
-      <div class="text-[11px] text-[#6B5A55]">60 per div • A–O</div></div>
-    <div class="card-stat"><div class="text-[11px] font-semibold text-[#6B5A55] uppercase">Timetable Slots</div>
-      <div class="text-3xl font-bold font-display">${totalSlots}</div>
-      <div class="text-[11px] text-[#6B5A55]">${totalRes} resources/notes</div></div>
-    <div class="card-stat"><div class="text-[11px] font-semibold text-[#6B5A55] uppercase">Firebase</div>
-      <div class="text-xl font-bold font-display text-[#0B7B4D]">● LIVE</div>
-      <div class="text-[11px] text-[#6B5A55]">Real-time sync</div></div>`;
-
-  const dash = document.getElementById('dash-subjects');
-  if (dash) {
-    if (subjects.length === 0) {
-      dash.innerHTML = `<div class="col-span-2 text-center py-8 text-[#6B5A55]">
-        No subjects yet in LIVE Firestore.<br>
-        Add <b>CSE 5A — 21CS53 DBMS (60 students)</b> to test. It syncs to all devices instantly.</div>`;
-    } else {
-      dash.innerHTML = subjects.slice(0, 6).map(s => `
-        <div class="card p-4 cursor-pointer" onclick="openSubjectDetail('${s.id}','dashboard')">
-          <div class="flex justify-between items-center flex-wrap gap-2">
-            <span class="code-badge">${s.code}</span>
-            <span class="meta-tag">${s.semester || ''} • ${s.division || ''}</span>
-          </div>
-          <div class="font-bold mt-1">${s.name}</div>
-          <div class="text-[12px] text-[#6B5A55]">${s.branch || ''} • 🧑‍🎓 ${s.strength || 60} • 🔥 LIVE</div>
-        </div>`).join('');
-    }
+window.renderDashboard = ()=>{
+  const stats=document.getElementById('dash-stats');
+  const total=subjects.length;
+  let totalStudents=0, totalSlots=0;
+  subjects.forEach(s=>{ totalStudents+=parseInt(s.strength)||60; totalSlots+=(s.timetable||[]).length; });
+  if(stats) stats.innerHTML=`<div class="card-stat"><div class="text-[11px] font-semibold text-[#6B5A55] uppercase">Total Subjects LIVE</div><div class="text-3xl font-bold font-display">${total}</div><div class="text-[11px] text-[#065F3A]">🔥 bec-bagalkote-rutu</div></div><div class="card-stat"><div class="text-[11px] font-semibold text-[#6B5A55] uppercase">Total Students</div><div class="text-3xl font-bold font-display">${totalStudents}</div><div class="text-[11px] text-[#6B5A55]">60 per div • A-O</div></div><div class="card-stat"><div class="text-[11px] font-semibold text-[#6B5A55] uppercase">Project ID</div><div class="text-[11px] font-bold font-display">bec-bagalkote-rutu</div><div class="text-[11px] text-[#065F3A]">● LIVE</div></div><div class="card-stat"><div class="text-[11px] font-semibold text-[#6B5A55] uppercase">Firebase</div><div class="text-xl font-bold font-display text-[#0B7B4D]">● LIVE</div><div class="text-[11px] text-[#6B5A55]">Real-time sync</div></div>`;
+  const dash=document.getElementById('dash-subjects');
+  if(dash){
+    if(subjects.length===0) dash.innerHTML='<div class="col-span-2 text-center py-8 text-[#6B5A55]">No subjects yet in LIVE Firestore.<br>Add CSE 5A 21CS53 DBMS (60 students) to test. Will sync to all devices instantly.</div>';
+    else dash.innerHTML=subjects.slice(0,6).map(s=>`<div class="card p-4"><div class="flex justify-between"><span class="code-badge">${s.code}</span><span class="meta-tag">${s.semester||''} • ${s.division||''}</span></div><div class="font-bold mt-1">${s.name}</div><div class="text-[12px] text-[#6B5A55]">${s.branch||''} • 🧑🎓 ${s.strength||60} • LIVE</div></div>`).join('');
   }
-
-  const ay = document.getElementById('dash-academic-year');
-  if (ay) ay.textContent = '2025-26';
+  document.getElementById('dash-academic-year').textContent='2025-26 • LIVE bec-bagalkote-rutu';
 };
-
-/* ============================================================
-   10. MY SUBJECTS
-   ============================================================ */
-window.renderMySubjects = () => {
-  const grid = document.getElementById('subjects-grid');
-  if (!grid) return;
-
-  if (subjects.length === 0) {
-    grid.innerHTML = `<div class="col-span-3 text-center py-16 text-[#6B5A55]">
-      No subjects in LIVE Firebase bec-bagalkote-rutu.<br>
-      Click <b>Add Subject</b> → CSE 5A — 21CS53 DBMS — 60 students.</div>`;
-    return;
-  }
-
-  grid.innerHTML = subjects.map(s => `
-    <div class="subject-card" onclick="openSubjectDetail('${s.id}','my-subjects')">
-      <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
-        <span class="code-badge">${s.code}</span>
-        <div class="flex gap-1">
-          <button class="p-1.5 rounded hover:bg-[#F1EDEB]" title="Edit"
-                  onclick="event.stopPropagation(); openEditSubjectModal('${s.id}')">
-            <span class="material-symbols-outlined text-[16px]">edit</span>
-          </button>
-          <button class="p-1.5 rounded hover:bg-red-50" title="Delete"
-                  onclick="event.stopPropagation(); deleteSubject('${s.id}')">
-            <span class="material-symbols-outlined text-[16px] text-[#B91C1C]">delete</span>
-          </button>
-        </div>
-      </div>
-      <h3 class="font-semibold text-[16px]">${s.name}</h3>
-      <p class="text-[12px] text-[#6B5A55] mt-1">
-        ${s.semester || '—'} • Div ${s.division || '—'} • ${s.branch || '—'} • 🧑‍🎓 ${s.strength || 60}
-      </p>
-      <div class="flex items-center gap-2 mt-3 text-[11px] text-[#6B5A55] flex-wrap">
-        <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.timetable || []).length} slots</span>
-        <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.notes || []).length} notes</span>
-        <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.resources || []).length} resources</span>
-      </div>
-    </div>`).join('');
+window.renderMySubjects = ()=>{
+  const grid=document.getElementById('subjects-grid');
+  if(!grid) return;
+  if(subjects.length===0){ grid.innerHTML='<div class="col-span-3 text-center py-16 text-[#6B5A55]">No subjects in LIVE Firebase bec-bagalkote-rutu.<br>Click Add Subject → CSE 5A 21CS53 DBMS 60 students.</div>'; return; }
+  grid.innerHTML=subjects.map(s=>`<div class="subject-card"><div class="flex justify-between mb-2"><span class="code-badge">${s.code}</span><div class="flex gap-1"><button class="p-1.5 rounded hover:bg-[#F1EDEB]" onclick="openEditSubjectModal('${s.id}')"><span class="material-symbols-outlined text-[16px]">edit</span></button><button class="p-1.5 rounded hover:bg-red-50" onclick="deleteSubject('${s.id}')"><span class="material-symbols-outlined text-[16px] text-[#B91C1C]">delete</span></button></div></div><h3 class="font-semibold">${s.name}</h3><p class="text-[12px] text-[#6B5A55]">${s.semester} • Div ${s.division} • ${s.branch} • 🧑🎓 ${s.strength} • LIVE</p></div>`).join('');
 };
-
-/* ============================================================
-   11. SUBJECT DETAIL — TABS  (NEW)
-   ============================================================ */
-window.openSubjectDetail = (id, from) => {
-  const s = subjects.find(x => x.id === id);
-  if (!s) { showToast('Subject not found', 'error'); return; }
-  currentSubjectId = id;
-  currentTab = 'overview';
-  previousView = from || (currentView === 'subject-detail' ? previousView : currentView) || 'my-subjects';
-  switchView('subject-detail');
+window.renderAttendanceView = ()=>{
+  const sel=document.getElementById('attendance-subject');
+  if(!sel) return;
+  sel.innerHTML=subjects.map(s=>`<option value="${s.id}">${s.code} - ${s.name} (${s.strength||60})</option>`).join('');
+  if(subjects.length>0){ sel.value=subjects[0].id; currentAttendanceSubjectId=subjects[0].id; document.getElementById('attendance-date').value=new Date().toISOString().split('T')[0]; loadAttendance(); }
 };
-
-window.goBackFromSubjectDetail = () => {
-  switchView(previousView || 'my-subjects');
-};
-
-window.openEditCurrentSubject = () => {
-  if (currentSubjectId) openEditSubjectModal(currentSubjectId);
-};
-
-window.switchSubjectTab = (tab) => {
-  currentTab = tab;
-  renderSubjectDetail();
-};
-
-window.renderSubjectDetail = () => {
-  const s = subjects.find(x => x.id === currentSubjectId);
-  const header = document.getElementById('subject-detail-header');
-  const content = document.getElementById('subject-tab-content');
-  if (!header || !content) return;
-
-  if (!s) {
-    header.innerHTML = '<div class="card p-5 text-center text-[#6B5A55]">Subject not found.</div>';
-    content.innerHTML = '';
-    return;
-  }
-
-  header.innerHTML = `
-    <div class="card p-5 mb-4">
-      <div class="flex items-center gap-2 mb-1 flex-wrap">
-        <span class="code-badge">${s.code}</span>
-        <span class="meta-tag">${s.semester || '—'}</span>
-        <span class="meta-tag">Div ${s.division || '—'}</span>
-        <span class="meta-tag">${s.branch || '—'}</span>
-        <span class="bg-[#FEF2F2] text-[#DC2626] text-[11px] font-semibold px-2.5 py-0.5 rounded-full">🧑‍🎓 ${s.strength || 60}</span>
-      </div>
-      <h1 class="text-2xl font-bold font-display text-[#1A0E0C]">${s.name}</h1>
-      <p class="text-[13px] text-[#6B5A55] mt-1">Dr. Mahadev Biradar · Dept. of Mathematics · 🔥 LIVE</p>
-    </div>`;
-
-  document.querySelectorAll('#subject-tabs .tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === currentTab);
-  });
-
-  renderTabContent(s, content);
-};
-
-function renderTabContent(s, el) {
-
-  /* ---------- OVERVIEW ---------- */
-  if (currentTab === 'overview') {
-    el.innerHTML = `
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="card p-5">
-          <h3 class="font-semibold text-[#1A0E0C] mb-2 text-[15px]">Subject Info</h3>
-          <div class="space-y-1 text-[13px]">
-            <p><span class="text-[#6B5A55]">Name:</span> <b>${s.name}</b></p>
-            <p><span class="text-[#6B5A55]">Code:</span> <b>${s.code}</b></p>
-            <p><span class="text-[#6B5A55]">Semester:</span> <b>${s.semester || '—'}</b></p>
-            <p><span class="text-[#6B5A55]">Division:</span> <b>${s.division || '—'}</b></p>
-            <p><span class="text-[#6B5A55]">Branch:</span> <b>${s.branch || '—'}</b></p>
-            <p><span class="text-[#6B5A55]">Strength:</span> <b>${s.strength || 60}</b></p>
-          </div>
-        </div>
-        <div class="card p-5">
-          <h3 class="font-semibold text-[#1A0E0C] mb-2 text-[15px]">Quick Stats</h3>
-          <div class="space-y-1 text-[13px]">
-            <p><span class="text-[#6B5A55]">Timetable slots:</span> <b>${(s.timetable || []).length}</b></p>
-            <p><span class="text-[#6B5A55]">Notes:</span> <b>${(s.notes || []).length}</b></p>
-            <p><span class="text-[#6B5A55]">Resources:</span> <b>${(s.resources || []).length}</b></p>
-            <p><span class="text-[#6B5A55]">Syllabus:</span> <b>${s.syllabus ? 'Set' : 'Not set'}</b></p>
-          </div>
-        </div>
-      </div>`;
-    return;
-  }
-
-  /* ---------- TIMETABLE ---------- */
-  if (currentTab === 'timetable') {
-    const slots = s.timetable || [];
-    el.innerHTML = `
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 class="font-semibold text-[#1A0E0C] text-[15px]">📅 Weekly Timetable</h3>
-          <button class="btn-secondary text-[12px]" onclick="openTimetableModal()">
-            <span class="material-symbols-outlined text-[16px]">add</span>Add Slot
-          </button>
-        </div>
-        ${slots.length === 0
-          ? '<p class="text-[13px] text-[#6B5A55]">No timetable entries yet.</p>'
-          : `<div class="overflow-x-auto"><table class="data-table">
-              <thead><tr><th>Day</th><th>Time</th><th>Room</th><th>Topic</th><th class="text-right">Actions</th></tr></thead>
-              <tbody>${slots.map((t, i) => `
-                <tr>
-                  <td class="font-semibold">${t.day || ''}</td>
-                  <td>${t.start || ''} – ${t.end || ''}</td>
-                  <td>${t.room || ''}</td>
-                  <td>${t.topic || ''}</td>
-                  <td class="text-right">
-                    <button class="p-1 text-[#B91C1C] hover:text-[#7F1D1D]" onclick="deleteTimetableSlot(${i})">
-                      <span class="material-symbols-outlined text-[16px]">delete</span>
-                    </button>
-                  </td>
-                </tr>`).join('')}</tbody>
-            </table></div>`}
-      </div>`;
-    return;
-  }
-
-  /* ---------- NOTES ---------- */
-  if (currentTab === 'notes') {
-    const notes = s.notes || [];
-    el.innerHTML = `
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 class="font-semibold text-[#1A0E0C] text-[15px]">📝 Notes</h3>
-          <button class="btn-secondary text-[12px]" onclick="openNoteModal()">
-            <span class="material-symbols-outlined text-[16px]">add</span>Add Note
-          </button>
-        </div>
-        ${notes.length === 0 ? '<p class="text-[13px] text-[#6B5A55]">No notes yet.</p>' : ''}
-        <div class="space-y-2">
-          ${notes.map((n, i) => `
-            <div class="bg-[#FDFBFA] p-3 rounded-lg border border-[#F0E8E6] flex items-start justify-between flex-wrap gap-2">
-              <div class="min-w-0">
-                <div class="font-semibold text-[14px] text-[#1A0E0C]">${n.title || ''}</div>
-                ${n.content ? `<div class="text-[12px] text-[#6B5A55]">${n.content}</div>` : ''}
-                ${n.linkUrl ? `<a href="${n.linkUrl}" target="_blank" class="text-[#DC2626] text-[12px] font-medium inline-flex items-center gap-1 mt-1">
-                  <span class="material-symbols-outlined text-[14px]">open_in_new</span>Open Link</a>` : ''}
-              </div>
-              <button class="p-1 text-[#B91C1C] hover:text-[#7F1D1D]" onclick="deleteNote(${i})">
-                <span class="material-symbols-outlined text-[16px]">delete</span>
-              </button>
-            </div>`).join('')}
-        </div>
-      </div>`;
-    return;
-  }
-
-  /* ---------- SYLLABUS ---------- */
-  if (currentTab === 'syllabus') {
-    el.innerHTML = `
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 class="font-semibold text-[#1A0E0C] text-[15px]">📖 Syllabus</h3>
-          <button class="btn-secondary text-[12px]" onclick="openSyllabusModal()">
-            <span class="material-symbols-outlined text-[16px]">edit</span>${s.syllabus ? 'Edit' : 'Add'}
-          </button>
-        </div>
-        ${s.syllabus
-          ? `${s.syllabus.content ? `<p class="text-[13px] text-[#1E1A18] whitespace-pre-wrap">${s.syllabus.content}</p>` : '<p class="text-[13px] text-[#6B5A55]">No content.</p>'}
-             ${s.syllabus.linkUrl ? `<a href="${s.syllabus.linkUrl}" target="_blank" class="text-[#DC2626] text-[13px] font-medium inline-flex items-center gap-1 mt-2">
-                <span class="material-symbols-outlined text-[14px]">open_in_new</span>Open Link</a>` : ''}`
-          : '<p class="text-[13px] text-[#6B5A55]">No syllabus set.</p>'}
-      </div>`;
-    return;
-  }
-
-  /* ---------- RESOURCES ---------- */
-  if (currentTab === 'resources') {
-    const resources = s.resources || [];
-    el.innerHTML = `
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 class="font-semibold text-[#1A0E0C] text-[15px]">📁 Resources</h3>
-          <button class="btn-secondary text-[12px]" onclick="openResourceModal()">
-            <span class="material-symbols-outlined text-[16px]">add</span>Add Resource
-          </button>
-        </div>
-        ${resources.length === 0 ? '<p class="text-[13px] text-[#6B5A55]">No resources yet.</p>' : ''}
-        <div class="space-y-2">
-          ${resources.map((r, i) => `
-            <div class="bg-[#FDFBFA] p-3 rounded-lg border border-[#F0E8E6] flex items-start justify-between flex-wrap gap-2">
-              <div class="min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="resource-type-badge">${r.type || 'notes'}</span>
-                  <span class="link-type-badge">${r.linkType || 'web-url'}</span>
-                </div>
-                <div class="font-semibold text-[14px] text-[#1A0E0C] mt-1">${r.title || ''}</div>
-                ${r.description ? `<div class="text-[12px] text-[#6B5A55]">${r.description}</div>` : ''}
-              </div>
-              <div class="flex items-center gap-1 flex-shrink-0">
-                ${r.linkUrl ? `<a href="${r.linkUrl}" target="_blank" class="p-1 text-[#DC2626] hover:bg-[#FEF2F2] rounded">
-                  <span class="material-symbols-outlined text-[16px]">open_in_new</span></a>` : ''}
-                <button class="p-1 text-[#B91C1C] hover:text-[#7F1D1D]" onclick="deleteResource(${i})">
-                  <span class="material-symbols-outlined text-[16px]">delete</span>
-                </button>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>`;
-    return;
-  }
-}
-
-/* ============================================================
-   12. TIMETABLE / NOTES / SYLLABUS / RESOURCES — MODAL HANDLERS
-   ============================================================ */
-
-/* -------- TIMETABLE -------- */
-window.openTimetableModal = () => {
-  if (!subjects.find(s => s.id === currentSubjectId)) { showToast('No subject selected.', 'error'); return; }
-  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const today = days[new Date().getDay() - 1] || 'Monday';
-  document.getElementById('tt-day').value   = today;
-  document.getElementById('tt-room').value  = '';
-  document.getElementById('tt-start').value = '';
-  document.getElementById('tt-end').value   = '';
-  document.getElementById('tt-topic').value = '';
-  document.getElementById('timetable-modal').classList.remove('hidden');
-};
-window.closeTimetableModal = () => document.getElementById('timetable-modal').classList.add('hidden');
-
-window.handleTimetableSubmit = async (e) => {
-  e.preventDefault();
-  const s = subjects.find(x => x.id === currentSubjectId);
-  if (!s) { showToast('No subject selected.', 'error'); return; }
-
-  const day   = document.getElementById('tt-day').value;
-  const start = document.getElementById('tt-start').value.trim();
-  const end   = document.getElementById('tt-end').value.trim();
-  const room  = document.getElementById('tt-room').value.trim();
-  const topic = document.getElementById('tt-topic').value.trim();
-
-  if (!start || !end) { showToast('Start and end time are required.', 'error'); return; }
-
-  const tt = Array.isArray(s.timetable) ? [...s.timetable] : [];
-  tt.push({ day, start, end, room, topic });
-
-  try {
-    await patchSubject(s.id, { timetable: tt });
-    closeTimetableModal();
-    showToast('✅ Timetable slot saved to LIVE Firebase', 'success');
-  } catch (err) {
-    console.error(err);
-    showToast('Save failed: ' + err.message, 'error');
-  }
-};
-
-window.deleteTimetableSlot = async (index) => {
-  const s = subjects.find(x => x.id === currentSubjectId);
-  if (!s) return;
-  const tt = Array.isArray(s.timetable) ? [...s.timetable] : [];
-  if (index < 0 || index >= tt.length) return;
-  tt.splice(index, 1);
-  try {
-    await patchSubject(s.id, { timetable: tt });
-    showToast('Slot removed.', 'info');
-  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
-};
-
-/* -------- NOTES -------- */
-window.openNoteModal = () => {
-  if (!subjects.find(s => s.id === currentSubjectId)) { showToast('No subject selected.', 'error'); return; }
-  document.getElementById('note-title').value = '';
-  document.getElementById('note-content').value = '';
-  document.getElementById('note-link-type').value = 'google-drive';
-  document.getElementById('note-link').value = '';
-  document.getElementById('note-modal').classList.remove('hidden');
-};
-window.closeNoteModal = () => document.getElementById('note-modal').classList.add('hidden');
-
-window.handleNoteSubmit = async (e) => {
-  e.preventDefault();
-  const s = subjects.find(x => x.id === currentSubjectId);
-  if (!s) { showToast('No subject selected.', 'error'); return; }
-
-  const title    = document.getElementById('note-title').value.trim();
-  const content  = document.getElementById('note-content').value.trim();
-  const linkType = document.getElementById('note-link-type').value;
-  const linkUrl  = document.getElementById('note-link').value.trim();
-
-  if (!title) { showToast('Note title is required.', 'error'); return; }
-
-  const notes = Array.isArray(s.notes) ? [...s.notes] : [];
-  notes.push({ title, content, linkType, linkUrl });
-
-  try {
-    await patchSubject(s.id, { notes });
-    closeNoteModal();
-    showToast('✅ Note saved to LIVE Firebase', 'success');
-  } catch (err) { showToast('Save failed: ' + err.message, 'error'); }
-};
-
-window.deleteNote = async (index) => {
-  const s = subjects.find(x => x.id === currentSubjectId);
-  if (!s) return;
-  const notes = Array.isArray(s.notes) ? [...s.notes] : [];
-  if (index < 0 || index >= notes.length) return;
-  notes.splice(index, 1);
-  try {
-    await patchSubject(s.id, { notes });
-    showToast('Note removed.', 'info');
-  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
-};
-
-/* -------- SYLLABUS -------- */
-window.openSyllabusModal = () => {
-  const s = subjects.find(x => x.id === currentSubjectId);
-  if (!s) { showToast('No subject selected.', 'error'); return; }
-  document.getElementById('syl-content').value   = s.syllabus?.content  || '';
-  document.getElementById('syl-link-type').value = s.syllabus?.linkType || 'google-drive';
-  document.getElementById('syl-link').value      = s.syllabus?.linkUrl  || '';
-  document.getElementById('syllabus-modal').classList.remove('hidden');
-};
-window.closeSyllabusModal = () => document.getElementById('syllabus-modal').classList.add('hidden');
-
-window.handleSyllabusSubmit = async (e) => {
-  e.preventDefault();
-  const s = subjects.find(x => x.id === currentSubjectId);
-  if (!s) { showToast('No subject selected.', 'error'); return; }
-
-  const syllabus = {
-    content:  document.getElementById('syl-content').value.trim(),
-    linkType: document.getElementById('syl-link-type').value,
-    linkUrl:  document.getElementById('syl-link').value.trim()
-  };
-
-  try {
-    await patchSubject(s.id, { syllabus });
-    closeSyllabusModal();
-    showToast('✅ Syllabus saved to LIVE Firebase', 'success');
-  } catch (err) { showToast('Save failed: ' + err.message, 'error'); }
-};
-
-/* -------- RESOURCES -------- */
-window.openResourceModal = () => {
-  if (!subjects.find(s => s.id === currentSubjectId)) { showToast('No subject selected.', 'error'); return; }
-  document.getElementById('res-title').value = '';
-  document.getElementById('res-type').value = 'notes';
-  document.getElementById('res-desc').value = '';
-  document.getElementById('res-link-type').value = 'google-drive';
-  document.getElementById('res-link').value = '';
-  document.getElementById('resource-modal').classList.remove('hidden');
-};
-window.closeResourceModal = () => document.getElementById('resource-modal').classList.add('hidden');
-
-window.handleResourceSubmit = async (e) => {
-  e.preventDefault();
-  const s = subjects.find(x => x.id === currentSubjectId);
-  if (!s) { showToast('No subject selected.', 'error'); return; }
-
-  const title       = document.getElementById('res-title').value.trim();
-  const type        = document.getElementById('res-type').value;
-  const description = document.getElementById('res-desc').value.trim();
-  const linkType    = document.getElementById('res-link-type').value;
-  const linkUrl     = document.getElementById('res-link').value.trim();
-
-  if (!title || !linkUrl) { showToast('Title and link URL are required.', 'error'); return; }
-
-  const resources = Array.isArray(s.resources) ? [...s.resources] : [];
-  resources.push({ title, type, description, linkType, linkUrl });
-
-  try {
-    await patchSubject(s.id, { resources });
-    closeResourceModal();
-    showToast('✅ Resource saved to LIVE Firebase', 'success');
-  } catch (err) { showToast('Save failed: ' + err.message, 'error'); }
-};
-
-window.deleteResource = async (index) => {
-  const s = subjects.find(x => x.id === currentSubjectId);
-  if (!s) return;
-  const resources = Array.isArray(s.resources) ? [...s.resources] : [];
-  if (index < 0 || index >= resources.length) return;
-  resources.splice(index, 1);
-  try {
-    await patchSubject(s.id, { resources });
-    showToast('Resource removed.', 'info');
-  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
-};
-
-/* ============================================================
-   13. ATTENDANCE VIEW
-   ============================================================ */
-window.renderAttendanceView = () => {
-  const sel = document.getElementById('attendance-subject');
-  if (!sel) return;
-
-  const prev = sel.value;
-  sel.innerHTML = subjects.map(s =>
-    `<option value="${s.id}">${s.code} - ${s.name} (${s.strength || 60})</option>`).join('');
-
-  if (subjects.length === 0) {
-    const grid = document.getElementById('roll-grid');
-    if (grid) grid.innerHTML = '';
-    const info = document.getElementById('attendance-strength-info');
-    if (info) info.textContent = 'No subjects. Add one first.';
-    return;
-  }
-
-  const pick = subjects.some(s => s.id === prev) ? prev : subjects[0].id;
-  sel.value = pick;
-  currentAttendanceSubjectId = pick;
-
-  const dateEl = document.getElementById('attendance-date');
-  if (!dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
-
-  loadAttendance();
-};
-
-window.loadAttendance = () => {
-  const sid  = document.getElementById('attendance-subject')?.value;
-  const date = document.getElementById('attendance-date')?.value;
-  if (!sid || !date) { showToast('Select subject & date', 'error'); return; }
-
-  currentAttendanceSubjectId = sid;
-  const key = `${sid}_${date}`;
-
-  if (!attendanceData[key]) attendanceData[key] = { subjectId: sid, date, absent: new Set() };
-  selectedAbsent = attendanceData[key].absent;
-
-  const subj     = subjects.find(s => s.id === sid);
-  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-
-  const infoEl = document.getElementById('attendance-strength-info');
-  if (infoEl) infoEl.textContent =
-    `Strength: ${strength} students (Roll 1–${strength}) • LIVE doc: attendance/${key}`;
-
-  const grid = document.getElementById('roll-grid');
-  let html = '';
-  for (let i = 1; i <= strength; i++) {
-    const isAbs = selectedAbsent.has(i);
-    html += `<button class="roll-btn ${isAbs ? 'absent' : ''}" onclick="toggleRoll(${i})">${i}</button>`;
-  }
-  if (grid) grid.innerHTML = html;
-
+window.loadAttendance = async ()=>{
+  const sid=document.getElementById('attendance-subject').value;
+  const date=document.getElementById('attendance-date').value;
+  if(!sid||!date){ showToast('Select subject & date','error'); return; }
+  currentAttendanceSubjectId=sid;
+  const key=`${sid}_${date}`;
+  if(!attendanceData[key]) attendanceData[key]={subjectId:sid, date, absent:new Set()};
+  selectedAbsent=attendanceData[key].absent;
+  const subj=subjects.find(s=>s.id===sid);
+  const strength=subj?subj.strength:60;
+  document.getElementById('attendance-strength-info').textContent=`Strength: ${strength} students (Roll 1-${strength}) • LIVE Firebase doc: ${key} in bec-bagalkote-rutu`;
+  const grid=document.getElementById('roll-grid');
+  let html='';
+  for(let i=1;i<=strength;i++){ const isAbs=selectedAbsent.has(i); html+=`<button class="roll-btn ${isAbs?'absent':''}" onclick="toggleRoll(${i})">${i}</button>`; }
+  grid.innerHTML=html;
   updateSelectedInfo();
 };
-
-window.toggleRoll = (roll) => {
-  if (selectedAbsent.has(roll)) selectedAbsent.delete(roll);
-  else selectedAbsent.add(roll);
-  const key = `${currentAttendanceSubjectId}_${document.getElementById('attendance-date').value}`;
-  if (attendanceData[key]) attendanceData[key].absent = selectedAbsent;
-  loadAttendance();
+window.toggleRoll = (roll)=>{ if(selectedAbsent.has(roll)) selectedAbsent.delete(roll); else selectedAbsent.add(roll); const key=`${currentAttendanceSubjectId}_${document.getElementById('attendance-date').value}`; if(attendanceData[key]) attendanceData[key].absent=selectedAbsent; loadAttendance(); };
+window.markAllPresent = ()=>{ selectedAbsent.clear(); const key=`${currentAttendanceSubjectId}_${document.getElementById('attendance-date').value}`; if(attendanceData[key]) attendanceData[key].absent=selectedAbsent; loadAttendance(); };
+window.markAllAbsent = ()=>{ const subj=subjects.find(s=>s.id===currentAttendanceSubjectId); const strength=subj?subj.strength:60; for(let i=1;i<=strength;i++) selectedAbsent.add(i); const key=`${currentAttendanceSubjectId}_${document.getElementById('attendance-date').value}`; if(attendanceData[key]) attendanceData[key].absent=selectedAbsent; loadAttendance(); };
+window.updateSelectedInfo = ()=>{ const el=document.getElementById('selected-info'); if(!el) return; if(selectedAbsent.size===0) el.innerHTML='<b>Absent:</b> None (All Present LIVE)'; else el.innerHTML=`<b>Absent (${selectedAbsent.size}):</b> ${Array.from(selectedAbsent).sort((a,b)=>a-b).join(', ')}`; };
+window.submitAttendance = async ()=>{
+  const date=document.getElementById('attendance-date').value;
+  const sid=currentAttendanceSubjectId;
+  if(!sid||!date){ showToast('Select subject & date','error'); return; }
+  const key=`${sid}_${date}`;
+  const rec={subjectId:sid, date, absent:selectedAbsent};
+  await saveAttendanceToFirebase(key, rec);
+  attendanceData[key]=rec;
+  showToast(`✅ LIVE Firebase Saved: ${key}<br>Project: bec-bagalkote-rutu<br>Present: ${60-selectedAbsent.size}, Absent: ${selectedAbsent.size}`, 'success');
+};
+window.renderHistory = ()=>{
+  const list=document.getElementById('history-list');
+  if(!list) return;
+  const sid=currentAttendanceSubjectId;
+  const records=[];
+  for(const k in attendanceData){ const r=attendanceData[k]; if(r.subjectId===sid) records.push(r); }
+  if(records.length===0){ list.innerHTML='<div class="text-[13px] text-[#6B5A55]">No history in LIVE Firebase bec-bagalkote-rutu for this subject.</div>'; return; }
+  list.innerHTML=records.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="flex justify-between bg-[#FDFBFA] p-3 rounded border"><div><b>📅 ${r.date}</b><div class="text-[12px] text-[#6B5A55]">${r.absent.size} absent LIVE</div></div><div class="text-[12px]">Absent: ${Array.from(r.absent).join(', ')||'None'}</div></div>`).join('');
+};
+window.renderStudentWebsite = ()=>{
+  const user=getCurrentUser();
+  if(!user) return;
+  document.getElementById('student-hero-semester').textContent=user.semester||'—';
+  document.getElementById('student-hero-division').textContent=user.division||'—';
+  document.getElementById('student-hero-branch').textContent=user.branch||'—';
+  const cont=document.getElementById('student-tab-content');
+  const mySubjects=subjects.filter(s=> s.semester===user.semester && s.division===user.division && s.branch===user.branch );
+  if(mySubjects.length===0){ cont.innerHTML=`<div class="card p-5 text-center">No subjects for ${user.semester} Div ${user.division} ${user.branch}<br>LIVE Total in bec-bagalkote-rutu: ${subjects.length}</div>`; return; }
+  cont.innerHTML=`<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${mySubjects.map(s=>`<div class="card p-4"><span class="code-badge">${s.code}</span><div class="font-bold mt-1">${s.name}</div><div class="text-[12px] text-[#6B5A55]">🧑🎓 ${s.strength} students • Div ${s.division} • LIVE</div></div>`).join('')}</div>`;
+};
+window.renderTeacherWebsite = ()=>{
+  const cont=document.getElementById('teacher-tab-content');
+  if(!cont) return;
+  document.getElementById('teacher-hero-subject-count').textContent=subjects.length;
+  const totalStudents=subjects.reduce((a,s)=>a+(parseInt(s.strength)||60),0);
+  document.getElementById('teacher-hero-student-count').textContent=totalStudents;
+  cont.innerHTML=`<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${subjects.map(s=>`<div class="card p-4"><span class="code-badge">${s.code}</span><div class="font-bold">${s.name}</div><div class="text-[12px]">Div ${s.division} • ${s.branch} • ${s.strength} students • LIVE bec-bagalkote-rutu</div></div>`).join('')}</div>`;
+};
+window.renderAdminUsers = async ()=>{
+  const users=await getUsers();
+  const tbody=document.getElementById('admin-users-table');
+  if(!tbody) return;
+  tbody.innerHTML=users.map(u=>`<tr><td class="font-semibold">${u.name}</td><td class="text-[13px]">${u.email}</td><td><span class="bg-[#FEF2F2] text-[#B91C1C] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">${u.role}</span></td><td class="text-[12px]">${u.semester||'—'} / ${u.division||'—'} / ${u.branch||'—'}</td><td>${u.email!=='mmbbec@gmail.com'?`<button class="text-[11px] bg-[#FEE2E2] text-[#991B1B] px-2 py-1 rounded" onclick="deleteUser('${u.email}')">Delete LIVE</button>`:'Protected'}</td></tr>`).join('');
+};
+window.deleteUser = async (email)=>{
+  if(email==='mmbbec@gmail.com'){ showToast('Cannot delete admin','error'); return; }
+  if(!confirm('Delete '+email+' from LIVE Firebase bec-bagalkote-rutu?')) return;
+  await deleteDoc(doc(db,'users',email));
+  showToast('User deleted from LIVE Firebase','info');
+  renderAdminUsers();
+};
+window.saveAcademicSettings = async ()=>{
+  await setDoc(doc(db,'colleges','bec_bagalkote_001'), {name:'Basaveshwar Engineering College Bagalkote', code:'2BA', branches:DEFAULT_BRANCHES, divisions:DEFAULT_DIVISIONS, semesters:DEFAULT_SEMS, studentsPerDiv:60, projectId:'bec-bagalkote-rutu', updatedAt:new Date().toISOString()}, {merge:true});
+  showToast('✅ Saved to LIVE Firebase bec-bagalkote-rutu: colleges/bec_bagalkote_001','success');
 };
 
-window.markAllPresent = () => {
-  selectedAbsent.clear();
-  const key = `${currentAttendanceSubjectId}_${document.getElementById('attendance-date').value}`;
-  if (attendanceData[key]) attendanceData[key].absent = selectedAbsent;
-  loadAttendance();
-};
-
-window.markAllAbsent = () => {
-  const subj = subjects.find(s => s.id === currentAttendanceSubjectId);
-  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-  for (let i = 1; i <= strength; i++) selectedAbsent.add(i);
-  const key = `${currentAttendanceSubjectId}_${document.getElementById('attendance-date').value}`;
-  if (attendanceData[key]) attendanceData[key].absent = selectedAbsent;
-  loadAttendance();
-};
-
-window.updateSelectedInfo = () => {
-  const el = document.getElementById('selected-info');
-  if (!el) return;
-  if (selectedAbsent.size === 0) {
-    el.innerHTML = '<strong>Selected Absent:</strong> None / All Present';
-  } else {
-    el.innerHTML = `<strong>Selected Absent (${selectedAbsent.size}):</strong> ` +
-      Array.from(selectedAbsent).sort((a, b) => a - b).join(', ');
-  }
-};
-
-window.submitAttendance = async () => {
-  const date = document.getElementById('attendance-date').value;
-  const sid  = currentAttendanceSubjectId;
-  if (!sid || !date) { showToast('Select subject & date', 'error'); return; }
-
-  const key = `${sid}_${date}`;
-  const rec = { subjectId: sid, date, absent: selectedAbsent };
-
-  try {
-    await saveAttendanceToFirebase(key, rec);
-    attendanceData[key] = rec;
-    const subj = subjects.find(s => s.id === sid);
-    const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-    const present = strength - selectedAbsent.size;
-    showToast(`✅ Saved to LIVE Firebase: <b>attendance/${key}</b><br>Present: ${present}, Absent: ${selectedAbsent.size}`, 'success');
-    if (!document.getElementById('attendance-history-wrap').classList.contains('hidden')) renderHistory();
-  } catch (err) {
-    console.error(err);
-    showToast('Save failed: ' + err.message, 'error');
-  }
-};
-
-window.toggleAttendanceHistory = () => {
-  const wrap = document.getElementById('attendance-history-wrap');
-  const isHidden = wrap.classList.contains('hidden');
-  wrap.classList.toggle('hidden');
-  if (isHidden) renderHistory();
-};
-
-window.renderHistory = () => {
-  const list = document.getElementById('history-list');
-  if (!list) return;
-  const sid = currentAttendanceSubjectId;
-  const records = [];
-  for (const k in attendanceData) {
-    const r = attendanceData[k];
-    if (r.subjectId === sid) records.push(r);
-  }
-  if (records.length === 0) {
-    list.innerHTML = '<div class="text-[13px] text-[#6B5A55]">No history in LIVE Firebase for this subject.</div>';
-    return;
-  }
-  const subj = subjects.find(s => s.id === sid);
-  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-
-  list.innerHTML = records.sort((a, b) => b.date.localeCompare(a.date)).map(r => {
-    const absentArr = Array.from(r.absent || []).sort((a, b) => a - b);
-    const present = strength - absentArr.length;
-    return `<div class="history-item">
-      <div>
-        <div class="date">📅 ${r.date}</div>
-        <div class="text-[12px] text-[#6B5A55]">${absentArr.length} absent • ${present} present</div>
-      </div>
-      <div class="flex gap-2 items-center flex-wrap">
-        <span class="badge-status present">${present} Present</span>
-        <span class="badge-status absent">${absentArr.length} Absent</span>
-        ${absentArr.length > 0
-          ? `<span class="text-[11px] text-[#6B5A55]">Rolls: ${absentArr.slice(0, 12).join(', ')}${absentArr.length > 12 ? '…' : ''}</span>`
-          : ''}
-      </div>
-    </div>`;
-  }).join('');
-};
-
-/* ============================================================
-   14. STUDENT PORTAL
-   ============================================================ */
-function getStudentSubjects(user) {
-  if (!user) return [];
-  return subjects.filter(s =>
-    s.semester && s.semester === user.semester &&
-    s.division && s.division === user.division &&
-    s.branch   && s.branch   === user.branch
-  );
-}
-window.getStudentSubjects = getStudentSubjects;
-
-window.renderStudentWebsite = () => {
-  const user = getCurrentUser();
-  if (!user) return;
-
-  const semEl  = document.getElementById('student-hero-semester');
-  const divEl  = document.getElementById('student-hero-division');
-  const brEl   = document.getElementById('student-hero-branch');
-  const yrEl   = document.getElementById('student-hero-year');
-  if (semEl) semEl.textContent = user.semester || '—';
-  if (divEl) divEl.textContent = user.division || '—';
-  if (brEl)  brEl.textContent  = user.branch   || '—';
-  if (yrEl)  yrEl.textContent  = '2025-26';
-
-  switchStudentTab(studentTab);
-};
-
-window.switchStudentTab = (tab) => {
-  studentTab = tab;
-  document.querySelectorAll('#student-tab-bar .tab-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.studentTab === tab));
-
-  const cont = document.getElementById('student-tab-content');
-  const user = getCurrentUser();
-  if (!cont || !user) return;
-
-  if      (tab === 'home')       renderStudentHome(cont, user);
-  else if (tab === 'subjects')   renderStudentSubjects(cont, user);
-  else if (tab === 'attendance') renderStudentAttendance(cont, user);
-  else if (tab === 'resources')  renderStudentResources(cont, user);
-};
-
-function renderStudentHome(cont, user) {
-  const mySubjects = getStudentSubjects(user);
-  const totalStudents = mySubjects.reduce((a, s) => a + (parseInt(s.strength) || 60), 0);
-  const totalRes = mySubjects.reduce((a, s) => a + (s.resources || []).length + (s.notes || []).length, 0);
-  const totalSlots = mySubjects.reduce((a, s) => a + (s.timetable || []).length, 0);
-
-  cont.innerHTML = `
-    <div class="text-[11px] text-[#64748B] bg-[#F1F5F9] p-2 rounded-lg mb-4 flex flex-wrap gap-2 items-center">
-      <span class="font-semibold">🔍 Filters:</span>
-      <span class="debug-badge">Semester: ${user.semester || '—'}</span>
-      <span class="debug-badge">Division: ${user.division || '—'}</span>
-      <span class="debug-badge">Branch: ${user.branch || '—'}</span>
-      <span class="debug-badge">📚 ${mySubjects.length} subject${mySubjects.length !== 1 ? 's' : ''} found</span>
-      ${mySubjects.length === 0 ? '<span class="text-[#B91C1C] font-semibold">⚠️ No matching subjects — contact your teacher.</span>' : ''}
-    </div>
-    <div class="stats-grid mb-6">
-      <div class="stat-item"><div class="num">${mySubjects.length}</div><div class="label">📚 Subjects</div></div>
-      <div class="stat-item"><div class="num">${totalStudents}</div><div class="label">🧑‍🎓 Class Strength</div></div>
-      <div class="stat-item"><div class="num">${totalRes}</div><div class="label">📄 Resources</div></div>
-      <div class="stat-item"><div class="num">${totalSlots}</div><div class="label">📅 Timetable Slots</div></div>
-    </div>
-    <div class="card p-5">
-      <h3 class="font-display font-semibold text-[#1A0E0C] mb-3 text-[15px]">📖 Today's Schedule</h3>
-      ${renderTodaySchedule(mySubjects)}
-    </div>`;
-}
-
-function renderTodaySchedule(subjectsList) {
-  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const todayName = days[new Date().getDay() - 1] || 'Monday';
-  let html = '', found = false;
-  subjectsList.forEach(s => {
-    (s.timetable || []).filter(t => t.day === todayName).forEach(t => {
-      found = true;
-      html += `<div class="flex items-center justify-between bg-[#FDFBFA] p-3 rounded-lg border border-[#F0E8E6] flex-wrap gap-1 mb-2">
-        <div>
-          <div class="font-semibold text-[14px] text-[#1A0E0C]">${s.name}</div>
-          <div class="text-[12px] text-[#6B5A55]">${t.start || ''} – ${t.end || ''} · ${t.room || ''}</div>
-        </div>
-        <span class="text-[12px] font-semibold text-[#DC2626]">${t.topic || ''}</span>
-      </div>`;
-    });
-  });
-  return found ? html : '<p class="text-[13px] text-[#6B5A55]">No classes scheduled today. 📅</p>';
-}
-
-function renderStudentSubjects(cont, user) {
-  const mySubjects = getStudentSubjects(user);
-
-  if (mySubjects.length === 0) {
-    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
-      📭 No subjects available for your branch, semester and division.
-      <div class="text-[12px] mt-2">Your filters: ${user.semester || '—'} · Div ${user.division || '—'} · ${user.branch || '—'}</div>
-      <div class="text-[12px] mt-1">Total subjects in system: ${subjects.length}</div>
-    </div>`;
-    return;
-  }
-
-  cont.innerHTML = `
-    <div class="mb-3 text-[13px] text-[#6B5A55] flex items-center gap-3 flex-wrap">
-      <span>📚 Showing <strong>${mySubjects.length}</strong> subject${mySubjects.length !== 1 ? 's' : ''}</span>
-      <span class="debug-badge">Sem: ${user.semester}</span>
-      <span class="debug-badge">Div: ${user.division}</span>
-      <span class="debug-badge">Branch: ${user.branch}</span>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      ${mySubjects.map(s => `
-        <div class="subject-card" onclick="showSubjectDetailStudent('${s.id}')">
-          <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-            <span class="code-badge">${s.code}</span>
-            <span class="meta-tag">${s.semester || '—'}</span>
-          </div>
-          <h3 class="font-semibold text-[16px]">${s.name}</h3>
-          <p class="text-[12px] text-[#6B5A55]">Div ${s.division || '—'} • ${s.branch || 'Common'} • 🧑‍🎓 ${s.strength || 60}</p>
-          ${(s.timetable || []).length > 0 ? `
-            <div class="mt-3 text-[12px] text-[#6B5A55]">
-              <span class="font-semibold text-[#1A0E0C]">📅 Timetable:</span>
-              ${s.timetable.slice(0, 3).map(t => `<div>${t.day || ''} ${t.start || ''}–${t.end || ''} · ${t.room || ''}</div>`).join('')}
-              ${s.timetable.length > 3 ? `<div class="text-[11px]">+${s.timetable.length - 3} more</div>` : ''}
-            </div>` : ''}
-          <div class="mt-3 text-[12px] text-[#DC2626] font-semibold">View Details →</div>
-        </div>`).join('')}
-    </div>`;
-}
-
-window.showSubjectDetailStudent = (id) => {
-  const s = subjects.find(x => x.id === id);
-  if (!s) { showToast('Subject not found', 'error'); return; }
-  const cont = document.getElementById('student-tab-content');
-  if (!cont) return;
-
-  const timetableHtml = (s.timetable || []).length > 0 ? `
-    <div class="mt-3"><h4 class="font-semibold text-[14px] text-[#1A0E0C] mb-1">📅 Timetable</h4>
-      ${s.timetable.map(t => `<div class="flex items-center gap-3 text-[13px] border-b border-[#F0E8E6] py-1.5 flex-wrap">
-        <span class="font-semibold w-[80px]">${t.day || ''}</span>
-        <span>${t.start || ''} – ${t.end || ''}</span>
-        <span class="text-[#6B5A55]">${t.room || ''}</span>
-        <span class="text-[#DC2626]">${t.topic || ''}</span>
-      </div>`).join('')}
-    </div>` : '';
-
-  const notesHtml = (s.notes || []).length > 0 ? `
-    <div class="mt-3"><h4 class="font-semibold text-[14px] text-[#1A0E0C] mb-1">📝 Notes</h4>
-      ${s.notes.map(n => `<div class="bg-[#FDFBFA] p-2 rounded border border-[#F0E8E6] mb-1.5 text-[13px]">
-        <span class="font-semibold">${n.title || ''}</span>
-        ${n.content ? `<div class="text-[#6B5A55] text-[12px]">${n.content}</div>` : ''}
-        ${n.linkUrl ? `<a href="${n.linkUrl}" target="_blank" class="text-[#DC2626] text-[12px] font-medium">🔗 Open</a>` : ''}
-      </div>`).join('')}
-    </div>` : '';
-
-  const syllabusHtml = s.syllabus ? `
-    <div class="mt-3"><h4 class="font-semibold text-[14px] text-[#1A0E0C] mb-1">📖 Syllabus</h4>
-      ${s.syllabus.content ? `<div class="bg-[#FDFBFA] p-3 rounded border border-[#F0E8E6] text-[13px] whitespace-pre-wrap">${s.syllabus.content}</div>` : ''}
-      ${s.syllabus.linkUrl ? `<a href="${s.syllabus.linkUrl}" target="_blank" class="text-[#DC2626] text-[13px] font-medium mt-1 inline-block">🔗 Open Syllabus</a>` : ''}
-    </div>` : '';
-
-  const resourcesHtml = (s.resources || []).length > 0 ? `
-    <div class="mt-3"><h4 class="font-semibold text-[14px] text-[#1A0E0C] mb-1">📁 Resources</h4>
-      ${s.resources.map(r => `<div class="bg-[#FDFBFA] p-2 rounded border border-[#F0E8E6] mb-1.5 text-[13px] flex items-center justify-between flex-wrap gap-2">
-        <span><span class="font-semibold">${r.title || ''}</span>
-        ${r.description ? `<span class="text-[#6B5A55] text-[12px]"> – ${r.description}</span>` : ''}</span>
-        ${r.linkUrl ? `<a href="${r.linkUrl}" target="_blank" class="text-[#DC2626] text-[12px] font-medium">🔗 Open</a>` : ''}
-      </div>`).join('')}
-    </div>` : '';
-
-  const empty = (!s.timetable || s.timetable.length === 0) &&
-                (!s.notes || s.notes.length === 0) &&
-                !s.syllabus &&
-                (!s.resources || s.resources.length === 0);
-
-  cont.innerHTML = `
-    <div class="card p-5">
-      <button class="btn-ghost text-[13px] mb-4" onclick="switchStudentTab('subjects')">
-        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back to Subjects
-      </button>
-      <div class="flex items-center gap-2 mb-2 flex-wrap">
-        <span class="code-badge">${s.code}</span>
-        <span class="meta-tag">${s.semester || '—'}</span>
-        <span class="meta-tag">Div ${s.division || '—'}</span>
-        <span class="meta-tag">${s.branch || '—'}</span>
-      </div>
-      <h2 class="text-2xl font-bold font-display text-[#1A0E0C]">${s.name}</h2>
-      <p class="text-[13px] text-[#6B5A55]">🧑‍🎓 ${s.strength || 60} students</p>
-      ${timetableHtml}${notesHtml}${syllabusHtml}${resourcesHtml}
-      ${empty ? '<div class="mt-4 text-[13px] text-[#6B5A55]">No content available for this subject yet.</div>' : ''}
-    </div>`;
-};
-
-function renderStudentAttendance(cont, user) {
-  const mySubjects = getStudentSubjects(user);
-  const subjectIds = mySubjects.map(s => s.id);
-
-  const records = [];
-  for (const key in attendanceData) {
-    const rec = attendanceData[key];
-    if (!subjectIds.includes(rec.subjectId)) continue;
-    const subject = subjects.find(s => s.id === rec.subjectId);
-    if (!subject) continue;
-    const absentArr = Array.from(rec.absent || []);
-    const strength = parseInt(subject.strength) || 60;
-    records.push({
-      date: rec.date,
-      subjectCode: subject.code,
-      subjectName: subject.name,
-      absent: absentArr.sort((a, b) => a - b),
-      total: strength,
-      presentCount: strength - absentArr.length
-    });
-  }
-  records.sort((a, b) => b.date.localeCompare(a.date));
-
-  if (records.length === 0) {
-    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
-      📊 No attendance records available for your subjects yet.</div>`;
-    return;
-  }
-
-  const totalDays = records.length;
-  const totalPresent = records.reduce((a, r) => a + r.presentCount, 0);
-  const totalPossible = records.reduce((a, r) => a + r.total, 0);
-  const overallPercent = totalPossible > 0 ? Math.round((totalPresent / totalPossible) * 100) : 0;
-
-  cont.innerHTML = `
-    <div class="stats-grid mb-6">
-      <div class="stat-item"><div class="num">${totalDays}</div><div class="label">📅 Days Recorded</div></div>
-      <div class="stat-item"><div class="num">${overallPercent}%</div><div class="label">📊 Overall Attendance</div></div>
-      <div class="stat-item"><div class="num">${totalPresent}</div><div class="label">✅ Present</div></div>
-      <div class="stat-item"><div class="num">${totalPossible - totalPresent}</div><div class="label">❌ Absent</div></div>
-    </div>
-    <div class="card p-5 overflow-x-auto">
-      <h3 class="font-display font-semibold text-[#1A0E0C] mb-3 text-[15px]">📋 Attendance History</h3>
-      <table class="data-table">
-        <thead><tr><th>Date</th><th>Subject</th><th>Absent Roll Numbers</th><th>Present</th></tr></thead>
-        <tbody>
-          ${records.slice(0, 30).map(r => `
-            <tr>
-              <td><strong>${r.date}</strong></td>
-              <td><span class="font-mono text-[#DC2626] font-bold">${r.subjectCode}</span> ${r.subjectName}</td>
-              <td><span class="font-mono text-[#991B1B] font-semibold text-[12px]">${r.absent.length ? r.absent.join(', ') : 'None (All Present)'}</span></td>
-              <td><span class="badge-status present">${r.presentCount}/${r.total}</span></td>
-            </tr>`).join('')}
-          ${records.length > 30 ? `<tr><td colspan="4" class="text-center text-[#6B5A55] text-[12px]">Showing last 30 records.</td></tr>` : ''}
-        </tbody>
-      </table>
-    </div>`;
-}
-
-function renderStudentResources(cont, user) {
-  const mySubjects = getStudentSubjects(user);
-  const allItems = [];
-  mySubjects.forEach(s => {
-    (s.resources || []).forEach(r => allItems.push({ ...r, subjectName: s.name, subjectCode: s.code, kind: 'resource' }));
-    (s.notes || []).forEach(n => allItems.push({ ...n, subjectName: s.name, subjectCode: s.code, kind: 'note' }));
-    if (s.syllabus) allItems.push({ ...s.syllabus, subjectName: s.name, subjectCode: s.code, kind: 'syllabus', title: 'Syllabus' });
-  });
-
-  if (allItems.length === 0) {
-    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
-      📭 No resources or notes available for your subjects yet.</div>`;
-    return;
-  }
-
-  cont.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    ${allItems.map(item => `
-      <div class="card p-4">
-        <div class="flex items-center gap-2 mb-1 flex-wrap">
-          <span class="resource-type-badge">${item.kind}</span>
-          <span class="meta-tag">${item.subjectCode}</span>
-        </div>
-        <h4 class="font-semibold text-[15px] text-[#1A0E0C]">${item.title || 'Untitled'}</h4>
-        <p class="text-[12px] text-[#6B5A55]">${item.subjectName}</p>
-        ${item.description ? `<p class="text-[13px] text-[#1E1A18] mt-1">${item.description}</p>` : ''}
-        ${item.content ? `<p class="text-[13px] text-[#1E1A18] mt-1 whitespace-pre-wrap">${item.content}</p>` : ''}
-        ${item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-[#DC2626] text-[13px] font-medium hover:underline">
-          🔗 Open Link <span class="material-symbols-outlined text-[14px]">open_in_new</span></a>` : ''}
-      </div>`).join('')}
-  </div>`;
-}
-
-/* ============================================================
-   15. TEACHER PORTAL
-   ============================================================ */
-window.renderTeacherWebsite = () => {
-  const totalStudents = subjects.reduce((a, s) => a + (parseInt(s.strength) || 60), 0);
-  const c = document.getElementById('teacher-hero-subject-count');
-  const st = document.getElementById('teacher-hero-student-count');
-  const yr = document.getElementById('teacher-hero-year');
-  if (c)  c.textContent  = subjects.length;
-  if (st) st.textContent = totalStudents;
-  if (yr) yr.textContent = '2025-26';
-  switchTeacherTab(teacherTab);
-};
-
-window.switchTeacherTab = (tab) => {
-  teacherTab = tab;
-  document.querySelectorAll('#teacher-tab-bar .tab-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.teacherTab === tab));
-
-  const cont = document.getElementById('teacher-tab-content');
-  if (!cont) return;
-
-  if      (tab === 'home')       renderTeacherHome(cont);
-  else if (tab === 'subjects')   renderTeacherSubjects(cont);
-  else if (tab === 'attendance') renderTeacherAttendance(cont);
-  else if (tab === 'timetable')  renderTeacherTimetable(cont);
-  else if (tab === 'resources')  renderTeacherResources(cont);
-};
-
-function renderTeacherHome(cont) {
-  const totalStudents = subjects.reduce((a, s) => a + (parseInt(s.strength) || 60), 0);
-  const totalRes = subjects.reduce((a, s) => a + (s.resources || []).length + (s.notes || []).length, 0);
-  const totalSlots = subjects.reduce((a, s) => a + (s.timetable || []).length, 0);
-
-  cont.innerHTML = `
-    <div class="stats-grid mb-6">
-      <div class="stat-item"><div class="num">${subjects.length}</div><div class="label">📚 Subjects</div></div>
-      <div class="stat-item"><div class="num">${totalStudents}</div><div class="label">🧑‍🎓 Total Students</div></div>
-      <div class="stat-item"><div class="num">${totalRes}</div><div class="label">📄 Resources</div></div>
-      <div class="stat-item"><div class="num">${totalSlots}</div><div class="label">📅 Timetable Slots</div></div>
-    </div>
-    <div class="card p-5">
-      <h3 class="font-display font-semibold text-[#1A0E0C] mb-3 text-[15px]">📖 Today's Classes</h3>
-      ${renderTodaySchedule(subjects)}
-    </div>`;
-}
-
-function renderTeacherSubjects(cont) {
-  if (subjects.length === 0) {
-    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
-      📭 No subjects created yet. Click <b>Add Subject</b> to begin.</div>`;
-    return;
-  }
-  cont.innerHTML = `
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-      <h3 class="font-display font-semibold text-[#1A0E0C] text-[15px]">All Subjects</h3>
-      <button class="btn-primary text-[12px]" onclick="openAddSubjectModal()">
-        <span class="material-symbols-outlined text-[16px]">add</span> Add Subject
-      </button>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      ${subjects.map(s => `
-        <div class="subject-card" onclick="openSubjectDetail('${s.id}','teacher')">
-          <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-            <span class="code-badge">${s.code}</span>
-            <span class="meta-tag">${s.semester || '—'}</span>
-          </div>
-          <h3 class="font-semibold text-[16px]">${s.name}</h3>
-          <p class="text-[12px] text-[#6B5A55]">Div ${s.division || '—'} • ${s.branch || '—'} • 🧑‍🎓 ${s.strength || 60}</p>
-          <div class="flex items-center gap-2 mt-2 text-[11px] text-[#6B5A55] flex-wrap">
-            <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.timetable || []).length} slots</span>
-            <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.notes || []).length} notes</span>
-            <span class="bg-[#F1EDEB] px-2.5 py-0.5 rounded-full">${(s.resources || []).length} resources</span>
-          </div>
-        </div>`).join('')}
-    </div>`;
-}
-
-function renderTeacherAttendance(cont) {
-  const optionsHtml = subjects.map(s =>
-    `<option value="${s.id}">${s.code} - ${s.name} (${s.strength || 60})</option>`).join('');
-
-  cont.innerHTML = `
-    <div class="card p-5">
-      <div class="flex flex-wrap items-end gap-4 mb-4">
-        <div class="flex-1 min-w-[160px]">
-          <label class="form-label">Select Subject</label>
-          <select id="teacher-attendance-subject" class="form-select">${optionsHtml}</select>
-        </div>
-        <div class="flex-1 min-w-[150px]">
-          <label class="form-label">Date</label>
-          <input type="date" id="teacher-attendance-date" class="form-input">
-        </div>
-        <button class="btn-secondary flex-shrink-0" onclick="loadTeacherAttendance()">Load</button>
-      </div>
-
-      <h3 class="font-semibold text-[15px] mb-1">Click roll numbers of <span class="text-[#B91C1C]">ABSENT</span> students</h3>
-      <p class="text-[12px] text-[#6B5A55] mb-3" id="teacher-attendance-strength-info">Strength: --</p>
-      <div id="teacher-roll-grid" class="attendance-grid"></div>
-
-      <div class="attendance-controls">
-        <button class="btn-success" onclick="markTeacherAllPresent()">
-          <span class="material-symbols-outlined text-[18px]">check_circle</span> All Present
-        </button>
-        <button class="btn-danger" onclick="markTeacherAllAbsent()">
-          <span class="material-symbols-outlined text-[18px]">cancel</span> All Absent
-        </button>
-        <div class="selected-info" id="teacher-selected-info"><strong>Selected Absent:</strong> None / All Present</div>
-        <button class="btn-secondary" onclick="submitTeacherAttendance()">
-          <span class="material-symbols-outlined text-[18px]">save</span> Submit
-        </button>
-      </div>
-
-      <div class="mt-4">
-        <button class="btn-ghost text-[13px]" onclick="toggleTeacherHistory()">
-          <span class="material-symbols-outlined text-[18px]">history</span> Show History
-        </button>
-        <div id="teacher-attendance-history" class="hidden mt-4">
-          <h4 class="font-semibold text-[14px] mb-2">Attendance History</h4>
-          <div id="teacher-history-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
-        </div>
-      </div>
-    </div>`;
-
-  if (subjects.length > 0) {
-    const sel = document.getElementById('teacher-attendance-subject');
-    sel.value = subjects[0].id;
-    document.getElementById('teacher-attendance-date').value = new Date().toISOString().split('T')[0];
-    loadTeacherAttendance();
-  }
-}
-
-let teacherSelectedAbsent = new Set();
-let teacherSubjectId = null;
-
-window.loadTeacherAttendance = () => {
-  const sid  = document.getElementById('teacher-attendance-subject')?.value;
-  const date = document.getElementById('teacher-attendance-date')?.value;
-  if (!sid || !date) { showToast('Select subject & date', 'error'); return; }
-
-  teacherSubjectId = sid;
-  const key = `${sid}_${date}`;
-  if (!attendanceData[key]) attendanceData[key] = { subjectId: sid, date, absent: new Set() };
-  teacherSelectedAbsent = attendanceData[key].absent;
-
-  const subj = subjects.find(s => s.id === sid);
-  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-
-  const info = document.getElementById('teacher-attendance-strength-info');
-  if (info) info.textContent = `Strength: ${strength} students (Roll 1–${strength}) • LIVE doc: attendance/${key}`;
-
-  const grid = document.getElementById('teacher-roll-grid');
-  let html = '';
-  for (let i = 1; i <= strength; i++) {
-    html += `<button class="roll-btn ${teacherSelectedAbsent.has(i) ? 'absent' : ''}" onclick="toggleTeacherRoll(${i})">${i}</button>`;
-  }
-  if (grid) grid.innerHTML = html;
-  updateTeacherSelectedInfo();
-};
-
-window.toggleTeacherRoll = (roll) => {
-  if (teacherSelectedAbsent.has(roll)) teacherSelectedAbsent.delete(roll);
-  else teacherSelectedAbsent.add(roll);
-  const key = `${teacherSubjectId}_${document.getElementById('teacher-attendance-date').value}`;
-  if (attendanceData[key]) attendanceData[key].absent = teacherSelectedAbsent;
-  const subj = subjects.find(s => s.id === teacherSubjectId);
-  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-  const grid = document.getElementById('teacher-roll-grid');
-  let html = '';
-  for (let i = 1; i <= strength; i++) {
-    html += `<button class="roll-btn ${teacherSelectedAbsent.has(i) ? 'absent' : ''}" onclick="toggleTeacherRoll(${i})">${i}</button>`;
-  }
-  if (grid) grid.innerHTML = html;
-  updateTeacherSelectedInfo();
-};
-
-window.markTeacherAllPresent = () => {
-  teacherSelectedAbsent.clear();
-  const key = `${teacherSubjectId}_${document.getElementById('teacher-attendance-date').value}`;
-  if (attendanceData[key]) attendanceData[key].absent = teacherSelectedAbsent;
-  loadTeacherAttendance();
-};
-
-window.markTeacherAllAbsent = () => {
-  const subj = subjects.find(s => s.id === teacherSubjectId);
-  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-  for (let i = 1; i <= strength; i++) teacherSelectedAbsent.add(i);
-  const key = `${teacherSubjectId}_${document.getElementById('teacher-attendance-date').value}`;
-  if (attendanceData[key]) attendanceData[key].absent = teacherSelectedAbsent;
-  loadTeacherAttendance();
-};
-
-function updateTeacherSelectedInfo() {
-  const el = document.getElementById('teacher-selected-info');
-  if (!el) return;
-  if (teacherSelectedAbsent.size === 0) {
-    el.innerHTML = '<strong>Selected Absent:</strong> None / All Present';
-  } else {
-    el.innerHTML = `<strong>Selected Absent (${teacherSelectedAbsent.size}):</strong> ` +
-      Array.from(teacherSelectedAbsent).sort((a, b) => a - b).join(', ');
-  }
-}
-
-window.submitTeacherAttendance = async () => {
-  const date = document.getElementById('teacher-attendance-date').value;
-  const sid = teacherSubjectId;
-  if (!sid || !date) { showToast('Select subject & date', 'error'); return; }
-
-  const key = `${sid}_${date}`;
-  const rec = { subjectId: sid, date, absent: teacherSelectedAbsent };
-
-  try {
-    await saveAttendanceToFirebase(key, rec);
-    attendanceData[key] = rec;
-    const subj = subjects.find(s => s.id === sid);
-    const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-    const present = strength - teacherSelectedAbsent.size;
-    showToast(`✅ Saved to LIVE Firebase: <b>attendance/${key}</b><br>Present: ${present}, Absent: ${teacherSelectedAbsent.size}`, 'success');
-  } catch (err) { showToast('Save failed: ' + err.message, 'error'); }
-};
-
-window.toggleTeacherHistory = () => {
-  const div = document.getElementById('teacher-attendance-history');
-  const hidden = div.classList.contains('hidden');
-  div.classList.toggle('hidden');
-  if (hidden) renderTeacherHistory();
-};
-
-function renderTeacherHistory() {
-  const list = document.getElementById('teacher-history-list');
-  if (!list) return;
-  const sid = teacherSubjectId;
-  const records = [];
-  for (const k in attendanceData) {
-    if (attendanceData[k].subjectId === sid) records.push(attendanceData[k]);
-  }
-  if (records.length === 0) {
-    list.innerHTML = '<div class="text-[13px] text-[#6B5A55]">No attendance records for this subject.</div>';
-    return;
-  }
-  const subj = subjects.find(s => s.id === sid);
-  const strength = subj ? (parseInt(subj.strength) || 60) : 60;
-
-  list.innerHTML = records.sort((a, b) => b.date.localeCompare(a.date)).map(r => {
-    const absentArr = Array.from(r.absent || []).sort((a, b) => a - b);
-    const present = strength - absentArr.length;
-    return `<div class="history-item">
-      <div>
-        <div class="date">📅 ${r.date}</div>
-        <div class="text-[12px] text-[#6B5A55]">${absentArr.length} absent • ${present} present</div>
-      </div>
-      <div class="flex gap-2 items-center flex-wrap">
-        <span class="badge-status present">${present} Present</span>
-        <span class="badge-status absent">${absentArr.length} Absent</span>
-        ${absentArr.length > 0 ? `<span class="text-[11px] text-[#6B5A55]">Rolls: ${absentArr.slice(0, 12).join(', ')}${absentArr.length > 12 ? '…' : ''}</span>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderTeacherTimetable(cont) {
-  if (subjects.length === 0) {
-    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">📭 No subjects available.</div>`;
-    return;
-  }
-
-  let html = `
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-      <h3 class="font-display font-semibold text-[#1A0E0C] text-[15px]">📅 Timetable Overview</h3>
-    </div>
-    <div class="space-y-4">`;
-
-  subjects.forEach(s => {
-    const slots = s.timetable || [];
-    html += `
-      <div class="card p-4">
-        <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="code-badge">${s.code}</span>
-            <span class="font-semibold text-[15px] text-[#1A0E0C]">${s.name}</span>
-          </div>
-          <button class="btn-ghost text-[11px]" onclick="openSubjectDetail('${s.id}','teacher')">
-            <span class="material-symbols-outlined text-[14px]">edit</span>Manage
-          </button>
-        </div>
-        ${slots.length === 0
-          ? '<p class="text-[13px] text-[#6B5A55]">No timetable slots added yet.</p>'
-          : `<div class="overflow-x-auto"><table class="data-table">
-              <thead><tr><th>Day</th><th>Time</th><th>Room</th><th>Topic</th></tr></thead>
-              <tbody>${slots.map(t => `
-                <tr>
-                  <td class="font-semibold">${t.day || ''}</td>
-                  <td>${t.start || ''} – ${t.end || ''}</td>
-                  <td>${t.room || ''}</td>
-                  <td>${t.topic || ''}</td>
-                </tr>`).join('')}
-              </tbody></table></div>`}
-        <div class="mt-2 text-[12px] text-[#6B5A55]">
-          🧑‍🎓 ${s.strength || 60} registered • Div ${s.division || '—'} • ${s.branch || '—'}
-        </div>
-      </div>`;
-  });
-
-  html += `</div>`;
-  cont.innerHTML = html;
-}
-
-function renderTeacherResources(cont) {
-  const allItems = [];
-  subjects.forEach(s => {
-    (s.resources || []).forEach(r => allItems.push({ ...r, subjectName: s.name, subjectCode: s.code, kind: 'resource' }));
-    (s.notes || []).forEach(n => allItems.push({ ...n, subjectName: s.name, subjectCode: s.code, kind: 'note' }));
-    if (s.syllabus) allItems.push({ ...s.syllabus, subjectName: s.name, subjectCode: s.code, kind: 'syllabus', title: 'Syllabus' });
-  });
-
-  if (allItems.length === 0) {
-    cont.innerHTML = `<div class="card p-5 text-center text-[#6B5A55] py-12">
-      📭 No resources or notes available across all subjects.</div>`;
-    return;
-  }
-
-  cont.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    ${allItems.map(item => `
-      <div class="card p-4">
-        <div class="flex items-center gap-2 mb-1 flex-wrap">
-          <span class="resource-type-badge">${item.kind}</span>
-          <span class="meta-tag">${item.subjectCode}</span>
-        </div>
-        <h4 class="font-semibold text-[15px] text-[#1A0E0C]">${item.title || 'Untitled'}</h4>
-        <p class="text-[12px] text-[#6B5A55]">${item.subjectName}</p>
-        ${item.description ? `<p class="text-[13px] text-[#1E1A18] mt-1">${item.description}</p>` : ''}
-        ${item.content ? `<p class="text-[13px] text-[#1E1A18] mt-1 whitespace-pre-wrap">${item.content}</p>` : ''}
-        ${item.linkUrl ? `<a href="${item.linkUrl}" target="_blank" class="mt-2 inline-flex items-center gap-1 text-[#DC2626] text-[13px] font-medium hover:underline">
-          🔗 Open Link <span class="material-symbols-outlined text-[14px]">open_in_new</span></a>` : ''}
-      </div>`).join('')}
-  </div>`;
-}
-
-/* ============================================================
-   16. ADMIN — USERS & SETTINGS
-   ============================================================ */
-window.renderAdminUsers = async () => {
-  const users = await getUsers();
-  const tbody = document.getElementById('admin-users-table');
-  if (!tbody) return;
-  tbody.innerHTML = users.map(u => `
-    <tr>
-      <td class="font-semibold">${u.name || '—'}</td>
-      <td class="text-[13px]">${u.email}</td>
-      <td><span class="bg-[#FEF2F2] text-[#B91C1C] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">${u.role || '—'}</span></td>
-      <td class="text-[12px]">${u.semester || '—'} / ${u.division || '—'} / ${u.branch || '—'}</td>
-      <td class="text-right">
-        ${u.email !== 'mmbbec@gmail.com'
-          ? `<button class="text-[11px] bg-[#FEE2E2] text-[#991B1B] px-2 py-1 rounded font-semibold" onclick="deleteUser('${u.email}')">Delete LIVE</button>`
-          : '<span class="text-[#6B5A55] text-[11px] font-medium">Protected</span>'}
-      </td>
-    </tr>`).join('');
-};
-
-window.deleteUser = async (email) => {
-  if (email === 'mmbbec@gmail.com') { showToast('Cannot delete admin', 'error'); return; }
-  if (!confirm('Delete ' + email + ' from LIVE Firebase bec-bagalkote-rutu?')) return;
-  try {
-    await deleteDoc(doc(db, 'users', email));
-    showToast('User deleted from LIVE Firebase', 'info');
-    renderAdminUsers();
-  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
-};
-
-window.renderAdminSettings = () => {
-  const ay = document.getElementById('academic-year');
-  const st = document.getElementById('semester-type');
-  if (ay) ay.value = localStorage.getItem('bec_academic_year') || '2025-26';
-  if (st) st.value = localStorage.getItem('bec_semester_type') || 'ODD';
-};
-
-window.saveAcademicSettings = async () => {
-  const year = document.getElementById('academic-year').value.trim() || '2025-26';
-  const type = document.getElementById('semester-type').value;
-  localStorage.setItem('bec_academic_year', year);
-  localStorage.setItem('bec_semester_type', type);
-  try {
-    await setDoc(doc(db, 'colleges', 'bec_bagalkote_001'), {
-      name: 'Basaveshwar Engineering College Bagalkote',
-      code: '2BA',
-      branches: DEFAULT_BRANCHES,
-      divisions: DEFAULT_DIVISIONS,
-      semesters: DEFAULT_SEMS,
-      studentsPerDiv: 60,
-      academicYear: year,
-      semesterType: type,
-      projectId: 'bec-bagalkote-rutu',
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
-    showToast('✅ Saved to LIVE Firebase: colleges/bec_bagalkote_001', 'success');
-  } catch (err) { showToast('Save failed: ' + err.message, 'error'); }
-};
-
-/* ============================================================
-   17. SUBJECT MODAL (Add / Edit)
-   ============================================================ */
-window.openAddSubjectModal = () => {
-  document.getElementById('subject-modal-title').textContent = 'Add Subject to LIVE Firebase';
-  document.getElementById('subject-form-id').value = '';
-  document.getElementById('subject-name').value = '';
-  document.getElementById('subject-code').value = '';
-  document.getElementById('subject-strength').value = '60';
-  populateAcademicDropdowns();
-  document.getElementById('subject-modal').classList.remove('hidden');
-};
-
-window.openEditSubjectModal = (id) => {
-  const s = subjects.find(x => x.id === id);
-  if (!s) { showToast('Subject not found', 'error'); return; }
-  document.getElementById('subject-modal-title').textContent = 'Edit Subject in LIVE Firebase';
-  document.getElementById('subject-form-id').value = s.id;
-  document.getElementById('subject-name').value = s.name;
-  document.getElementById('subject-code').value = s.code;
-  document.getElementById('subject-strength').value = s.strength || 60;
-  populateAcademicDropdowns();
-
-  /* keep custom values if not in the default lists */
-  const semSel = document.getElementById('subject-semester');
-  const divSel = document.getElementById('subject-division');
-  const brSel  = document.getElementById('subject-branch');
-
-  if (s.semester && !DEFAULT_SEMS.includes(s.semester))
-    semSel.innerHTML += `<option value="${s.semester}">${s.semester}</option>`;
-  if (s.division && !DEFAULT_DIVISIONS.includes(s.division))
-    divSel.innerHTML += `<option value="${s.division}">${s.division}</option>`;
-  if (s.branch && !DEFAULT_BRANCHES.includes(s.branch))
-    brSel.innerHTML += `<option value="${s.branch}">${s.branch}</option>`;
-
-  semSel.value = s.semester || DEFAULT_SEMS[0];
-  divSel.value = s.division || DEFAULT_DIVISIONS[0];
-  brSel.value  = s.branch   || DEFAULT_BRANCHES[0];
-
-  document.getElementById('subject-modal').classList.remove('hidden');
-};
-
-window.closeSubjectModal = () => document.getElementById('subject-modal').classList.add('hidden');
-
-window.handleSubjectSubmit = async (e) => {
+window.openAddSubjectModal = ()=>{ document.getElementById('subject-modal-title').textContent='Add Subject to LIVE bec-bagalkote-rutu'; document.getElementById('subject-form-id').value=''; document.getElementById('subject-name').value=''; document.getElementById('subject-code').value=''; document.getElementById('subject-strength').value='60'; populateAcademicDropdowns(); document.getElementById('subject-modal').classList.remove('hidden'); };
+window.openEditSubjectModal = (id)=>{ const s=subjects.find(x=>x.id===id); if(!s){ showToast('Not found','error'); return; } document.getElementById('subject-modal-title').textContent='Edit Subject in LIVE Firebase'; document.getElementById('subject-form-id').value=s.id; document.getElementById('subject-name').value=s.name; document.getElementById('subject-code').value=s.code; document.getElementById('subject-strength').value=s.strength||60; populateAcademicDropdowns(); document.getElementById('subject-semester').value=s.semester; document.getElementById('subject-division').value=s.division; document.getElementById('subject-branch').value=s.branch; document.getElementById('subject-modal').classList.remove('hidden'); };
+window.closeSubjectModal = ()=> document.getElementById('subject-modal').classList.add('hidden');
+window.handleSubjectSubmit = async (e)=>{
   e.preventDefault();
-
-  const id       = document.getElementById('subject-form-id').value || Date.now().toString();
-  const name     = document.getElementById('subject-name').value.trim();
-  const code     = document.getElementById('subject-code').value.trim();
-  const semester = document.getElementById('subject-semester').value;
-  const division = document.getElementById('subject-division').value;
-  const branch   = document.getElementById('subject-branch').value;
-  const strength = parseInt(document.getElementById('subject-strength').value) || 60;
-
-  if (!name || !code) { showToast('Name and Code are required', 'error'); return; }
-  if (strength < 1)   { showToast('Strength must be at least 1', 'error'); return; }
-
-  /* duplicate check (same code + branch + sem + div, excluding self) */
-  const duplicate = subjects.some(s =>
-    s.id !== id &&
-    s.code.toLowerCase() === code.toLowerCase() &&
-    s.branch === branch &&
-    s.semester === semester &&
-    s.division === division
-  );
-  if (duplicate) {
-    showToast(`Subject code "${code}" already exists for this branch / sem / division.`, 'error');
-    return;
-  }
-
-  const existing = subjects.find(s => s.id === id);
-  const subj = {
-    id, name, code, semester, division, branch, strength,
-    timetable: existing?.timetable || [],
-    notes:     existing?.notes     || [],
-    resources: existing?.resources || [],
-    syllabus:  existing?.syllabus  || null,
-    collegeId: 'bec_bagalkote_001'
-  };
-
-  try {
-    await saveSubjectToFirebase(subj);
-    closeSubjectModal();
-    showToast(`✅ LIVE Firebase: Subject <b>${code}</b> saved! Div ${division} • ${strength} students`, 'success');
-  } catch (err) {
-    console.error(err);
-    showToast('Save failed: ' + err.message, 'error');
-  }
+  const id=document.getElementById('subject-form-id').value||Date.now().toString();
+  const name=document.getElementById('subject-name').value.trim();
+  const code=document.getElementById('subject-code').value.trim();
+  const sem=document.getElementById('subject-semester').value;
+  const div=document.getElementById('subject-division').value;
+  const branch=document.getElementById('subject-branch').value;
+  const strength=parseInt(document.getElementById('subject-strength').value)||60;
+  if(!name||!code){ showToast('Name & Code required','error'); return; }
+  const subj={id,name,code,semester:sem,division:div,branch,strength,timetable:[],notes:[],resources:[],syllabus:null, collegeId:'bec_bagalkote_001'};
+  const existing=subjects.find(s=>s.id===id);
+  if(existing){ subj.timetable=existing.timetable; subj.notes=existing.notes; subj.resources=existing.resources; subj.syllabus=existing.syllabus; }
+  await saveSubjectToFirebase(subj);
+  closeSubjectModal();
+  showToast(`✅ LIVE Firebase: Subject ${code} saved! Div ${div} • ${strength} students • bec-bagalkote-rutu`, 'success');
 };
+window.deleteSubject = async (id)=>{ if(!confirm('Delete subject from LIVE Firebase bec-bagalkote-rutu? Attendance also deleted.')) return; await deleteSubjectFromFirebase(id); for(const k in attendanceData){ if(attendanceData[k].subjectId===id){ await deleteDoc(doc(db,'attendance',k)); } } showToast('Deleted from LIVE Firebase','info'); };
 
-window.deleteSubject = async (id) => {
-  const s = subjects.find(x => x.id === id);
-  if (!s) return;
-  if (!confirm(`Delete "${s.code} - ${s.name}" from LIVE Firebase?\nAll attendance records for this subject will also be deleted.`)) return;
-  try {
-    await deleteSubjectFromFirebase(id);
-    /* delete related attendance docs */
-    for (const k in attendanceData) {
-      if (attendanceData[k].subjectId === id) {
-        await deleteDoc(doc(db, 'attendance', k));
-        delete attendanceData[k];
-      }
-    }
-    if (currentSubjectId === id) { currentSubjectId = null; switchView(previousView || 'my-subjects'); }
-    showToast('Subject deleted from LIVE Firebase', 'info');
-  } catch (err) { showToast('Delete failed: ' + err.message, 'error'); }
+window.switchView = (view)=>{
+  currentView=view;
+  document.querySelectorAll('.view-section').forEach(el=>el.classList.add('hidden'));
+  const target=document.getElementById('view-'+view);
+  if(target) target.classList.remove('hidden');
+  document.querySelectorAll('.sidebar-link').forEach(el=>el.classList.remove('active'));
+  const link=document.querySelector(`.sidebar-link[data-view="${view}"]`);
+  if(link) link.classList.add('active');
+  document.getElementById('page-title').textContent=view.charAt(0).toUpperCase()+view.slice(1)+' 🔥 LIVE';
+  if(view==='dashboard') renderDashboard();
+  else if(view==='my-subjects') renderMySubjects();
+  else if(view==='attendance') renderAttendanceView();
+  else if(view==='student') renderStudentWebsite();
+  else if(view==='teacher') renderTeacherWebsite();
+  else if(view==='admin-users') renderAdminUsers();
+  if(window.innerWidth<=768) toggleSidebar(false);
 };
+window.toggleSidebar = (force)=>{ const sb=document.querySelector('.sidebar-fixed'); const bd=document.getElementById('sidebar-backdrop'); const isOpen=sb.classList.contains('open'); const newState=force!==undefined?force:!isOpen; if(newState){ sb.classList.add('open'); bd.classList.add('open'); }else{ sb.classList.remove('open'); bd.classList.remove('open'); } };
 
-/* ============================================================
-   18. VIEW ROUTING & SIDEBAR
-   ============================================================ */
-window.switchView = (view) => {
-  currentView = view;
-
-  document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-  const target = document.getElementById('view-' + view);
-  if (target) target.classList.remove('hidden');
-
-  document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
-  /* keep the parent link active when inside subject-detail */
-  const linkView = (view === 'subject-detail') ? 'my-subjects' : view;
-  const link = document.querySelector(`.sidebar-link[data-view="${linkView}"]`);
-  if (link) link.classList.add('active');
-
-  const titles = {
-    dashboard: 'Dashboard',
-    'my-subjects': 'My Subjects',
-    'subject-detail': 'Subject Details',
-    attendance: 'Attendance',
-    student: 'Student Portal',
-    teacher: 'Faculty Portal',
-    'admin-users': 'User Management',
-    'admin-settings': 'Settings'
-  };
-  const pt = document.getElementById('page-title');
-  if (pt) pt.textContent = (titles[view] || view) + ' 🔥 LIVE';
-
-  if      (view === 'dashboard')      renderDashboard();
-  else if (view === 'my-subjects')    renderMySubjects();
-  else if (view === 'subject-detail') renderSubjectDetail();
-  else if (view === 'attendance')     renderAttendanceView();
-  else if (view === 'student')        renderStudentWebsite();
-  else if (view === 'teacher')        renderTeacherWebsite();
-  else if (view === 'admin-users')    renderAdminUsers();
-  else if (view === 'admin-settings') renderAdminSettings();
-
-  if (window.innerWidth <= 768) toggleSidebar(false);
-};
-
-window.toggleSidebar = (force) => {
-  const sb = document.querySelector('.sidebar-fixed');
-  const bd = document.getElementById('sidebar-backdrop');
-  if (!sb || !bd) return;
-  const isOpen = sb.classList.contains('open');
-  const newState = force !== undefined ? force : !isOpen;
-  if (newState) {
-    sb.classList.add('open');
-    bd.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  } else {
-    sb.classList.remove('open');
-    bd.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-};
-
-window.addEventListener('resize', () => {
-  if (window.innerWidth > 768) {
-    const sb = document.querySelector('.sidebar-fixed');
-    const bd = document.getElementById('sidebar-backdrop');
-    if (sb && bd) { sb.classList.remove('open'); bd.classList.remove('open'); }
-    document.body.style.overflow = '';
-  }
-});
-
-/* ============================================================
-   19. INIT APP
-   ============================================================ */
-async function initApp() {
-  const user = getCurrentUser();
-  if (!user) {
-    document.getElementById('auth-container').classList.remove('hidden');
-    document.getElementById('app-wrapper').classList.remove('show');
-    return;
-  }
-
+async function initApp(){
+  const user=getCurrentUser();
+  if(!user){ document.getElementById('auth-container').classList.remove('hidden'); document.getElementById('app-wrapper').classList.remove('show'); return; }
   document.getElementById('auth-container').classList.add('hidden');
   document.getElementById('app-wrapper').classList.add('show');
-
-  const initial = (user.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-
-  document.getElementById('sidebar-avatar').textContent = initial;
-  document.getElementById('sidebar-name').textContent   = user.name || 'User';
-  document.getElementById('sidebar-role').textContent   =
-    user.role === 'admin' ? 'Administrator · LIVE' :
-    user.role === 'teacher' ? 'Faculty · LIVE' : 'Student · LIVE';
-  document.getElementById('sidebar-academic').textContent =
-    `${user.semester || ''}${user.division ? ' · Div ' + user.division : ''}${user.branch ? ' · ' + user.branch : ''}`;
-  document.getElementById('header-user').textContent   = user.name || 'User';
-  document.getElementById('header-avatar').textContent = initial;
-
-  const nav = document.getElementById('sidebar-nav');
-  let links = '';
-
-  if (user.role === 'admin') {
-    links = `
-      <a class="sidebar-link active" data-view="dashboard" href="#" onclick="switchView('dashboard');return false;"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
-      <a class="sidebar-link" data-view="my-subjects" href="#" onclick="switchView('my-subjects');return false;"><span class="material-symbols-outlined">auto_stories</span>My Subjects</a>
-      <a class="sidebar-link" data-view="attendance" href="#" onclick="switchView('attendance');return false;"><span class="material-symbols-outlined">fact_check</span>Attendance</a>
-      <a class="sidebar-link" data-view="student" href="#" onclick="switchView('student');return false;"><span class="material-symbols-outlined">visibility</span>Student View</a>
-      <a class="sidebar-link" data-view="teacher" href="#" onclick="switchView('teacher');return false;"><span class="material-symbols-outlined">school</span>Teacher View</a>
-      <a class="sidebar-link" data-view="admin-users" href="#" onclick="switchView('admin-users');return false;"><span class="material-symbols-outlined">people</span>Users</a>
-      <a class="sidebar-link" data-view="admin-settings" href="#" onclick="switchView('admin-settings');return false;"><span class="material-symbols-outlined">settings</span>Settings</a>`;
-  } else if (user.role === 'teacher') {
-    links = `
-      <a class="sidebar-link active" data-view="teacher" href="#" onclick="switchView('teacher');return false;"><span class="material-symbols-outlined">home</span>Home</a>
-      <a class="sidebar-link" data-view="my-subjects" href="#" onclick="switchView('my-subjects');return false;"><span class="material-symbols-outlined">auto_stories</span>My Subjects</a>
-      <a class="sidebar-link" data-view="attendance" href="#" onclick="switchView('attendance');return false;"><span class="material-symbols-outlined">fact_check</span>Attendance</a>`;
+  const initial=user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sidebar-avatar').textContent=initial;
+  document.getElementById('sidebar-name').textContent=user.name;
+  document.getElementById('sidebar-role').textContent=user.role==='admin'?'Administrator LIVE':user.role==='teacher'?'Faculty LIVE':'Student LIVE';
+  document.getElementById('sidebar-academic').textContent=`${user.semester||''} ${user.division?'Div '+user.division:''} ${user.branch||''}`;
+  document.getElementById('header-user').textContent=user.name;
+  document.getElementById('header-avatar').textContent=initial;
+  const nav=document.getElementById('sidebar-nav');
+  let links='';
+  if(user.role==='admin'){
+    links=`<a class="sidebar-link active" data-view="dashboard" href="#" onclick="switchView('dashboard')"><span class="material-symbols-outlined">dashboard</span>Dashboard LIVE</a><a class="sidebar-link" data-view="my-subjects" href="#" onclick="switchView('my-subjects')"><span class="material-symbols-outlined">auto_stories</span>My Subjects</a><a class="sidebar-link" data-view="attendance" href="#" onclick="switchView('attendance')"><span class="material-symbols-outlined">fact_check</span>Attendance (60)</a><a class="sidebar-link" data-view="student" href="#" onclick="switchView('student')"><span class="material-symbols-outlined">visibility</span>Student View</a><a class="sidebar-link" data-view="teacher" href="#" onclick="switchView('teacher')"><span class="material-symbols-outlined">school</span>Teacher View</a><a class="sidebar-link" data-view="admin-users" href="#" onclick="switchView('admin-users')"><span class="material-symbols-outlined">people</span>Users LIVE</a><a class="sidebar-link" data-view="admin-settings" href="#" onclick="switchView('admin-settings')"><span class="material-symbols-outlined">settings</span>Settings LIVE</a>`;
+  } else if(user.role==='teacher'){
+    links=`<a class="sidebar-link active" data-view="teacher" href="#" onclick="switchView('teacher')"><span class="material-symbols-outlined">home</span>Home LIVE</a><a class="sidebar-link" data-view="my-subjects" href="#" onclick="switchView('my-subjects')"><span class="material-symbols-outlined">auto_stories</span>My Subjects</a><a class="sidebar-link" data-view="attendance" href="#" onclick="switchView('attendance')"><span class="material-symbols-outlined">fact_check</span>Attendance LIVE</a>`;
   } else {
-    links = `
-      <a class="sidebar-link active" data-view="student" href="#" onclick="switchView('student');return false;"><span class="material-symbols-outlined">home</span>Student Home</a>`;
+    links=`<a class="sidebar-link active" data-view="student" href="#" onclick="switchView('student')"><span class="material-symbols-outlined">home</span>Student Home LIVE</a>`;
   }
-  nav.innerHTML = links;
-
+  nav.innerHTML=links;
   populateAcademicDropdowns();
   await loadAttendanceDataFirebase();
   loadSubjectsLive();
-
-  if      (user.role === 'student') switchView('student');
-  else if (user.role === 'teacher') switchView('teacher');
-  else                              switchView('dashboard');
+  if(user.role==='student') switchView('student');
+  else if(user.role==='teacher') switchView('teacher');
+  else switchView('dashboard');
 }
-
-/* ============================================================
-   20. BOOT
-   ============================================================ */
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', async ()=>{
   populateAcademicDropdowns();
-
-  /* hide branch group initially (teacher default) */
-  const bg = document.getElementById('branch-group');
-  if (bg) bg.style.display = 'none';
-
   await loadAttendanceDataFirebase();
-
-  const session = getSession();
-  if (session) {
-    initApp();
-  } else {
-    document.getElementById('auth-container').classList.remove('hidden');
-    document.getElementById('app-wrapper').classList.remove('show');
-    showLogin();
-  }
+  const session=getSession();
+  if(session){ initApp(); } else { document.getElementById('auth-container').classList.remove('hidden'); showLogin(); }
 });
-
-/* ============================================================
-   21. EXPOSE ALL HANDLERS TO GLOBAL SCOPE (for inline onclick)
-   ============================================================ */
-Object.assign(window, {
-  /* auth */
-  handleLogin, handleSignup, showLogin, showSignup, selectRole,
-  getSession, getCurrentUser, logout,
-  /* views */
-  switchView, toggleSidebar, renderAll,
-  /* subjects */
-  openAddSubjectModal, openEditSubjectModal, closeSubjectModal, handleSubjectSubmit, deleteSubject,
-  /* subject detail */
-  openSubjectDetail, goBackFromSubjectDetail, openEditCurrentSubject,
-  switchSubjectTab, renderSubjectDetail,
-  /* timetable */
-  openTimetableModal, closeTimetableModal, handleTimetableSubmit, deleteTimetableSlot,
-  /* notes */
-  openNoteModal, closeNoteModal, handleNoteSubmit, deleteNote,
-  /* syllabus */
-  openSyllabusModal, closeSyllabusModal, handleSyllabusSubmit,
-  /* resources */
-  openResourceModal, closeResourceModal, handleResourceSubmit, deleteResource,
-  /* attendance */
-  renderAttendanceView, loadAttendance, toggleRoll,
-  markAllPresent, markAllAbsent, updateSelectedInfo, submitAttendance,
-  toggleAttendanceHistory, renderHistory,
-  /* student */
-  renderStudentWebsite, switchStudentTab, showSubjectDetailStudent,
-  /* teacher */
-  renderTeacherWebsite, switchTeacherTab,
-  loadTeacherAttendance, toggleTeacherRoll,
-  markTeacherAllPresent, markTeacherAllAbsent, submitTeacherAttendance,
-  toggleTeacherHistory,
-  /* admin */
-  renderAdminUsers, deleteUser, renderAdminSettings, saveAcademicSettings,
-  /* helpers */
-  populateAcademicDropdowns, getStudentSubjects, patchSubject
-});
-
-console.log('%c🔥 BEC Bagalkote · LIVE Firebase bec-bagalkote-rutu ready', 'color:#0B7B4D;font-weight:700');
 </script>
 </body>
 </html>
